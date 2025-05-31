@@ -2,8 +2,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:prime_web/cubit/get_setting_cubit.dart';
-import 'package:prime_web/ui/widgets/load_web_view.dart';
+import 'package:sougou_app/cubit/get_setting_cubit.dart';
+import 'package:sougou_app/ui/widgets/load_web_view.dart';
 
 class AppContentScreen extends StatefulWidget {
   const AppContentScreen({

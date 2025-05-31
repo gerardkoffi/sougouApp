@@ -11,11 +11,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:prime_web/cubit/get_setting_cubit.dart';
-import 'package:prime_web/utils/constants.dart';
-import 'package:prime_web/main.dart';
-import 'package:prime_web/provider/navigation_bar_provider.dart';
-import 'package:prime_web/ui/widgets/widgets.dart';
+import 'package:sougou_app/cubit/get_setting_cubit.dart';
+import 'package:sougou_app/utils/constants.dart';
+import 'package:sougou_app/main.dart';
+import 'package:sougou_app/provider/navigation_bar_provider.dart';
+import 'package:sougou_app/ui/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 

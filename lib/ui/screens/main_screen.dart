@@ -1,15 +1,17 @@
+/*
 import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:lottie/lottie.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:prime_web/cubit/get_setting_cubit.dart';
-import 'package:prime_web/utils/constants.dart';
-import 'package:prime_web/provider/navigation_bar_provider.dart';
-import 'package:prime_web/ui/screens/home_screen.dart';
-import 'package:prime_web/ui/screens/setting_screens/settings_screen.dart';
-import 'package:prime_web/ui/widgets/widgets.dart';
+import 'package:sougou_app/cubit/get_setting_cubit.dart';
+import 'package:sougou_app/ui/screens/dashboard.dart';
+import 'package:sougou_app/utils/constants.dart';
+import 'package:sougou_app/provider/navigation_bar_provider.dart';
+import 'package:sougou_app/ui/screens/home_screen.dart';
+import 'package:sougou_app/ui/screens/setting_screens/settings_screen.dart';
+import 'package:sougou_app/ui/widgets/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -125,10 +127,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
-      /* start--uncommnet  below 2 lines to enable landscape mode */
+      */
+/* start--uncommnet  below 2 lines to enable landscape mode *//*
+
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
-      /*end */
+      */
+/*end *//*
+
     ]);
   }
 
@@ -199,7 +205,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             Navigator(
               key: _navigatorKeys[i],
               onGenerateRoute: (_) => MaterialPageRoute(
-                builder: (_) => HomeScreen(_navigationTabs[i]['url']!),
+                builder: (_) => Main(_navigationTabs[i]['url']!),
               ),
             ),
           );
@@ -529,3 +535,4 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     );
   }
 }
+*/

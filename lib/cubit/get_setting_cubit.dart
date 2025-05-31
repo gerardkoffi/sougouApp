@@ -2,9 +2,9 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:prime_web/data/model/get_setting_model.dart';
-import 'package:prime_web/data/repositories/get_setting_repositories.dart';
-import 'package:prime_web/utils/constants.dart';
+import 'package:sougou_app/data/model/get_setting_model.dart';
+import 'package:sougou_app/data/repositories/get_setting_repositories.dart';
+import 'package:sougou_app/utils/constants.dart';
 
 abstract class GetSettingState {}
 

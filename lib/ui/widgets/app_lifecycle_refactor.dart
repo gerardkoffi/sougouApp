@@ -1,6 +1,6 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import 'package:prime_web/ui/widgets/admob_service.dart';
+import 'package:sougou_app/ui/widgets/admob_service.dart';
 
 /// Listens for app foreground events and shows app open ads.
 class AppLifecycleReactor {

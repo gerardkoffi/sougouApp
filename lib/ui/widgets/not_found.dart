@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:prime_web/utils/strings.dart';
-import 'package:prime_web/provider/navigation_bar_provider.dart';
+import 'package:sougou_app/utils/strings.dart';
+import 'package:sougou_app/provider/navigation_bar_provider.dart';
 import 'package:provider/provider.dart';
 
 class NotFound extends StatefulWidget {

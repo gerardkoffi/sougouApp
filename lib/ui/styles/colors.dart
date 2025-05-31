@@ -20,17 +20,17 @@ const primaryColor = Color(0xFF30475E);
 const backgroundColorLightTheme = Color(0xFFF5F5F5);
 const backgroundColorDarkTheme = Color(0xFF041C32);
 const accentColor = Color(0xFFC92BCE);
-const splashBackColor1 = Color(0xFF13123F);
-const splashBackColor2 = Color(0xFFD932C7);
+const splashBackColor1 = Color(0xFFFFCB8B);
+const splashBackColor2 = Color(0xFFFFFFFF);
 const whiteColor = Color(0xFFFFFFFF);
 const blackColor = Color(0xFF000000);
 
-const onboardingButtonColor1 = Color(0xFF21005D);
-const onboardingButtonColor2 = Color(0xFFD932C7);
+const onboardingButtonColor1 = Color(0xFFE08900);
+const onboardingButtonColor2 = Color(0xFFFFFFFF);
 const onboardingBGColor = Color(0xFFFFFFFF);
 
-const indicatorColor1 = Color(0xFF6A05FE);
-const indicatorColor2 = Color(0xFFFD41B4);
+const indicatorColor1 = Color(0xFFE69416);
+const indicatorColor2 = Color(0xFFF6D6A8);
 const indicatorColor3 = Color(0xFFF37B46);
 
 const indicatorColor = LinearGradient(

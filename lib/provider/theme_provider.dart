@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:prime_web/main.dart';
-import 'package:prime_web/ui/styles/colors.dart';
+import 'package:sougou_app/main.dart';
+import 'package:sougou_app/ui/styles/colors.dart';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeProvider({required bool isDarkTheme}) {
@@ -33,6 +33,7 @@ class ThemeProvider extends ChangeNotifier {
 
 class AppThemes {
   static final darkTheme = ThemeData(
+    //useMaterial3: true,
     scaffoldBackgroundColor: backgroundColorDarkTheme,
     colorScheme: const ColorScheme.dark(),
     fontFamily: 'SegUI',

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:prime_web/utils/strings.dart';
+import 'package:sougou_app/utils/strings.dart';
 
 class MaintenanceModeScreen extends StatelessWidget {
   const MaintenanceModeScreen({super.key});

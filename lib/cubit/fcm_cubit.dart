@@ -1,7 +1,7 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:prime_web/data/repositories/fcm_repositories.dart';
+import 'package:sougou_app/data/repositories/fcm_repositories.dart';
 
 abstract class SetFcmState {}
 

@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:prime_web/cubit/get_onbording_cubit.dart';
-import 'package:prime_web/utils/constants.dart';
-import 'package:prime_web/main.dart';
-import 'package:prime_web/ui/screens/main_screen.dart';
-import 'package:prime_web/ui/widgets/glassmorphism_container.dart';
+import 'package:one_context/one_context.dart';
+import 'package:shimmer/main.dart';
+import 'package:sougou_app/cubit/get_onbording_cubit.dart';
+import 'package:sougou_app/ui/screens/auth/login.dart';
+import 'package:sougou_app/ui/screens/home_screen.dart';
+import 'package:sougou_app/utils/constants.dart';
+import 'package:sougou_app/main.dart';
+import 'package:sougou_app/ui/screens/main_screen.dart';
+import 'package:sougou_app/ui/widgets/glassmorphism_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreenThree extends StatefulWidget {
@@ -50,7 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreenThree>
                 alignment: Alignment.topRight,
                 child: TextButton(
                   onPressed: jumpToMainPage,
-                  child: Text('Skip', style: headline),
+                  child: Text('Passer', style: headline),
                 ),
               ),
             ),
@@ -89,12 +93,14 @@ class _OnboardingScreenState extends State<OnboardingScreenThree>
                                     height: size.height * 0.4,
                                     width: size.width,
                                     child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 25),
-                                      child: Image.network(
-                                        filterOnbordingData[index]
-                                            .image
-                                            .toString(),
+                                        padding: const EdgeInsets.only(right: 20),
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(left: 70,right: 50),
+                                        child: Image.asset(
+                                          filterOnbordingData[index]
+                                              .image
+                                              .toString(),
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -119,7 +125,7 @@ class _OnboardingScreenState extends State<OnboardingScreenThree>
                                                   textStye: const TextStyle(
                                                     color: primaryColor,
                                                     fontWeight: FontWeight.w900,
-                                                    fontSize: 28,
+                                                    fontSize: 26,
                                                   ),
                                                 ),
                                               ),
@@ -134,7 +140,7 @@ class _OnboardingScreenState extends State<OnboardingScreenThree>
                                                           .toString(),
                                                   textStye: const TextStyle(
                                                     color: primaryColor,
-                                                    fontSize: 20,
+                                                    fontSize: 18,
                                                     fontWeight: FontWeight.w600,
                                                   ),
                                                 ),
@@ -146,20 +152,16 @@ class _OnboardingScreenState extends State<OnboardingScreenThree>
                                                 bottom: size.height * 0.06),
                                             child: GestureDetector(
                                               onTap: () async {
-                                                if (_selectedIndex <
-                                                    totalPages - 1) {
+                                                if (_selectedIndex < totalPages - 1) {
                                                   setState(() {
-                                                    value =
-                                                        (_selectedIndex + 1) /
-                                                            totalPages;
+                                                    value = (_selectedIndex + 1) / totalPages;
                                                   });
                                                   await pageController.nextPage(
                                                     duration: const Duration(
                                                         milliseconds: 500),
                                                     curve: Curves.easeInOut,
                                                   );
-                                                } else if (_selectedIndex ==
-                                                    totalPages - 1) {
+                                                } else if (_selectedIndex == totalPages - 1) {
                                                   setState(() {
                                                     value += 1;
                                                   });
@@ -260,11 +262,11 @@ class _OnboardingScreenState extends State<OnboardingScreenThree>
   Future<void> jumpToMainPage() async {
     final pref = await SharedPreferences.getInstance();
     await pref.setBool('isFirstTimeUser', false);
-    await navigatorKey.currentState!.pushReplacement(
-      MaterialPageRoute<MyHomePage>(
-        builder: (_) => MyHomePage(webUrl: webInitialUrl),
-      ),
-    );
+     await OneContext().key.currentState!.pushReplacement(
+       MaterialPageRoute<Home>(
+         builder: (_) => LoginPage(),
+       ),
+     );
   }
 }
 

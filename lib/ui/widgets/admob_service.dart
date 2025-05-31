@@ -1,7 +1,7 @@
 import 'dart:developer';
 
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:prime_web/utils/constants.dart';
+import 'package:sougou_app/utils/constants.dart';
 
 class AdMobService {
   static InterstitialAd? _interstitialAd;

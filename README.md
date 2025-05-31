@@ -1,4 +1,4 @@
-D# prime_web
+D# sougou_app
 
 A new Flutter project.
 

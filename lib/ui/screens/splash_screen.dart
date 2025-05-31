@@ -4,17 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:prime_web/cubit/fcm_cubit.dart';
-import 'package:prime_web/cubit/get_onbording_cubit.dart';
-import 'package:prime_web/cubit/get_setting_cubit.dart';
-import 'package:prime_web/ui/screens/main_screen.dart';
-import 'package:prime_web/ui/screens/maintenance_screen/maintenance_mode_screen.dart';
-import 'package:prime_web/ui/screens/onbording_screens/onboarding_style_one.dart';
-import 'package:prime_web/ui/screens/onbording_screens/onbording_style_three.dart';
-import 'package:prime_web/ui/screens/onbording_screens/onbording_style_two.dart';
-import 'package:prime_web/ui/widgets/no_internet.dart';
-import 'package:prime_web/utils/constants.dart';
+import 'package:sougou_app/cubit/fcm_cubit.dart';
+import 'package:sougou_app/cubit/get_onbording_cubit.dart';
+import 'package:sougou_app/cubit/get_setting_cubit.dart';
+import 'package:sougou_app/ui/screens/auth/login.dart';
+import 'package:sougou_app/ui/screens/maintenance_screen/maintenance_mode_screen.dart';
+import 'package:sougou_app/ui/screens/onbording_screens/onboarding_style_one.dart';
+import 'package:sougou_app/ui/screens/onbording_screens/onbording_style_three.dart';
+import 'package:sougou_app/ui/screens/onbording_screens/onbording_style_two.dart';
+import 'package:sougou_app/ui/widgets/no_internet.dart';
+import 'package:sougou_app/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'dashboard.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -73,52 +75,64 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<void> startTimer() async {
     final pref = await SharedPreferences.getInstance();
     final state = _getSettingCubit.state;
+
     if (state is GetSettingStateInSussess) {
       final maintenanceMode = state.settingdata.appMaintenanceMode;
+
+      // Vérification du mode maintenance
       if (maintenanceMode == "1") {
         Navigator.pushReplacement(
           context,
+          MaterialPageRoute(builder: (context) => MaintenanceModeScreen()),
+        );
+        return;
+      }
+
+      // Vérification de l'onboarding
+      if (_getSettingCubit.onboardingStatus() &&
+          (pref.getBool('isFirstTimeUser') ?? true) &&
+          _getOnbordingCubit.OnbordingListIsNotEmty()) {
+        final onboardingStyle = _getSettingCubit.onbordingStyle();
+        Navigator.pushReplacement(
+          context,
           MaterialPageRoute(
-            builder: (context) => MaintenanceModeScreen(),
+            builder: (context) {
+              switch (onboardingStyle) {
+                case 'style1':
+                  return const OnboardingScreenOne();
+                case 'style2':
+                  return const OnboardingScreenTwo();
+                case 'style3':
+                  return const OnboardingScreenThree();
+                default:
+                  return const OnboardingScreenOne();
+              }
+            },
           ),
         );
+        return;
+      }
+
+        final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null && token.isNotEmpty) {
+        print("Mon token: $token");
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Main()),
+        );
       } else {
-        if (_getSettingCubit.onboardingStatus() &&
-            (pref.getBool('isFirstTimeUser') ?? true) &&
-            _getOnbordingCubit.OnbordingListIsNotEmty()) {
-          final onboardingStyle = _getSettingCubit.onbordingStyle();
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) {
-                switch (onboardingStyle) {
-                  case 'style1':
-                    return const OnboardingScreenOne();
-                  case 'style2':
-                    return const OnboardingScreenTwo();
-                  case 'style3':
-                    return const OnboardingScreenThree();
-                  default:
-                    return const OnboardingScreenOne();
-                }
-              },
-            ),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MyHomePage(
-                webUrl: webInitialUrl,
-              ),
-            ),
-          );
-        }
+        // ❌ Aucun token => Rediriger vers la page de Login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginPage()),
+        );
       }
     } else if (state is GetSettingInError) {
       print('Error fetching settings: ${state.error}');
     }
   }
+
 
   Future<void> _retryConnection() async {
     setState(() {
@@ -177,10 +191,9 @@ class _SplashScreenState extends State<SplashScreen> {
                     ),
                   ),
                   child: Center(
-                    child: SvgPicture.asset(
-                      CustomIcons.splashLogo,
-                      width: 200,
-                      height: 200,
+                    child: Image.asset('assets/icons/logo.png',
+                      width: 100,
+                      height: 100,
                     ),
                   ),
                 ),

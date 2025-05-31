@@ -6,44 +6,44 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:one_context/one_context.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:prime_web/cubit/fcm_cubit.dart';
-import 'package:prime_web/cubit/get_onbording_cubit.dart';
-import 'package:prime_web/cubit/get_setting_cubit.dart';
-import 'package:prime_web/utils/constants.dart';
-import 'package:prime_web/provider/navigation_bar_provider.dart';
-import 'package:prime_web/provider/theme_provider.dart';
-import 'package:prime_web/ui/screens/setting_screens/settings_screen.dart';
-import 'package:prime_web/ui/screens/splash_screen.dart';
-import 'package:prime_web/ui/widgets/admob_service.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_value/shared_value.dart';
 
-final navigatorKey = GlobalKey<NavigatorState>();
+import 'package:sougou_app/cubit/fcm_cubit.dart';
+import 'package:sougou_app/cubit/get_onbording_cubit.dart';
+import 'package:sougou_app/cubit/get_setting_cubit.dart';
+import 'package:sougou_app/cubit/get_otpgenerate_cubit.dart';
+import 'package:sougou_app/data/repositories/auth_repositories.dart';
+import 'package:sougou_app/data/repositories/get_otpgenerate_repositories.dart';
+import 'package:sougou_app/data/repositories/verify_otp_repositories.dart';
+
+import 'package:sougou_app/provider/navigation_bar_provider.dart';
+import 'package:sougou_app/provider/theme_provider.dart';
+import 'package:sougou_app/ui/screens/splash_screen.dart';
+import 'package:sougou_app/ui/widgets/admob_service.dart';
+
+import 'package:sougou_app/utils/constants.dart';
+
+import 'cubit/auth_cubit.dart';
+import 'ui/screens/set_screens/settings_screen.dart';
+
+//final navigatorKey = GlobalKey<NavigatorState>();
 late SharedPreferences pref;
 
+/// Fonction pour demander et vérifier les permissions de stockage
 Future<bool> enableStoragePermission() async {
   if (Platform.isIOS) {
-    if (await Permission.storage.isGranted) {
-      return true;
-    } else {
-      return (await Permission.storage.request()).isGranted;
-    }
+    return await Permission.storage.request().isGranted;
   } else {
     final androidDeviceInfo = await DeviceInfoPlugin().androidInfo;
-
     if (androidDeviceInfo.version.sdkInt < 33) {
-      if (await Permission.storage.isGranted) {
-        return true;
-      } else {
-        return (await Permission.storage.request()).isGranted;
-      }
+      return await Permission.storage.request().isGranted;
     } else {
-      if (await Permission.photos.isGranted) {
-        return true;
-      } else {
-        return (await Permission.photos.request()).isGranted;
-      }
+      return await Permission.photos.request().isGranted;
     }
   }
 }
@@ -51,7 +51,7 @@ Future<bool> enableStoragePermission() async {
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   pref = await SharedPreferences.getInstance();
-
+  await initializeDateFormatting('fr_FR', null);
   await SystemChrome.setEnabledSystemUIMode(
     SystemUiMode.manual,
     overlays: [SystemUiOverlay.top],
@@ -60,10 +60,6 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
-
-    /// NOTE: Uncomment below 2 lines to enable landscape mode
-    // DeviceOrientation.landscapeLeft,
-    // DeviceOrientation.landscapeRight,
   ]);
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -73,41 +69,24 @@ Future<void> main() async {
   await Firebase.initializeApp();
   AdMobService.initialize();
 
+  await enableStoragePermission();
 
   const counter = 0;
+  pref.setInt('counter', counter);
 
-  if (isStoragePermissionEnabled) {
-    await enableStoragePermission();
-  }
+  final bool isDarkTheme = pref.getBool('isDarkTheme') ?? false;
 
-  await SharedPreferences.getInstance().then((prefs) {
-    prefs.setInt('counter', counter);
-    final bool isDarkTheme;
-    if (prefs.getBool('isDarkTheme') ?? ThemeMode.system == ThemeMode.dark) {
-      isDarkTheme = true;
-    } else {
-      isDarkTheme = false;
-    }
-
-    return runApp(
-      ChangeNotifierProvider<ThemeProvider>(
-        child: const MyApp(),
-        create: (BuildContext context) {
-          return ThemeProvider(isDarkTheme: isDarkTheme);
-        },
-      ),
-    );
-  });
+  runApp(
+    ChangeNotifierProvider<ThemeProvider>(
+      create: (BuildContext context) => ThemeProvider(isDarkTheme: isDarkTheme),
+      child: SharedValue.wrapApp(MyApp()),
+    ),
+  );
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  @override
-  State<MyApp> createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -115,28 +94,23 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider<NavigationBarProvider>(
           create: (_) => NavigationBarProvider(),
         ),
+        BlocProvider(create: (context) => GetSettingCubit()),
+        BlocProvider(create: (context) => GetOnbordingCubit()),
+        BlocProvider(create: (context) => SetFcmCubit()),
+        BlocProvider(create: (context) => AuthCubit(AuthRepository())),
+        BlocProvider(create: (context) => OTPCubit(otpRepository: OTPRepository(), verifyOtpRepository: VerifyOtpRepositories())),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, value, child) {
-          return MultiProvider(
-            providers: [
-              BlocProvider(
-                create: (context) => GetSettingCubit(),
-              ),
-              BlocProvider(
-                create: (context) => GetOnbordingCubit(),
-              ),
-              BlocProvider(
-                create: (context) => SetFcmCubit(),
-              ),
-            ],
-            child: MaterialApp(
+          return MaterialApp(
+              builder: OneContext().builder, // <--- essentiel
+              navigatorKey: OneContext().key,
               title: appName,
               debugShowCheckedModeBanner: false,
               themeMode: value.getTheme(),
               theme: AppThemes.lightTheme,
               darkTheme: AppThemes.darkTheme,
-              navigatorKey: navigatorKey,
+              //navigatorKey: navigatorKey,
               onGenerateRoute: (RouteSettings settings) {
                 return switch (settings.name) {
                   'settings' => CupertinoPageRoute(
@@ -146,10 +120,18 @@ class _MyAppState extends State<MyApp> {
                 };
               },
               home: const SplashScreen(),
-            ),
           );
         },
       ),
     );
+  }
+}
+
+/// Classe pour ignorer les erreurs de certificat SSL
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
   }
 }

@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
  xmlns:tools="http://schemas.android.com/tools"
-    package="com.wrteam.webviewprime">
+    package="com.sougou.webviewapp">
     <queries>
       <!-- If your app opens https URLs -->
       <intent>
@@ -56,7 +56,7 @@
 
       
    <application
-        android:label="Prime Web"
+        android:label="SOUGOU"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher_squircle"
         android:usesCleartextTraffic="true"

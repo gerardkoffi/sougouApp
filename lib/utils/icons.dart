@@ -16,7 +16,7 @@ abstract class CustomIcons {
           ? '$_iconPath/settings_dark.json'
           : '$_iconPath/settings_light.json';
 
-  static const splashLogo = '$_iconPath/splash_logo.svg';
+  static const splashLogo = '$_iconPath/splash_logo.png';
 
   static const darkModeIcon = '$_iconPath/darkmode.svg';
 

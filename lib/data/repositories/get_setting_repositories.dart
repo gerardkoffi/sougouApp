@@ -1,5 +1,5 @@
-import 'package:prime_web/data/model/get_setting_model.dart';
-import 'package:prime_web/utils/api.dart';
+import 'package:sougou_app/data/model/get_setting_model.dart';
+import 'package:sougou_app/utils/api.dart';
 
 class Getsetting {
   static Future<GetSettingModel> Getsettingrepo() async {

@@ -1,5 +1,5 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:prime_web/utils/api.dart';
+import 'package:sougou_app/utils/api.dart';
 
 class SetFcm {
   Future<String> getFcmToken() async {

@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:prime_web/ui/styles/colors.dart';
-import 'package:prime_web/provider/theme_provider.dart';
+import 'package:sougou_app/ui/styles/colors.dart';
+import 'package:sougou_app/provider/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 class ChangeThemeButtonWidget extends StatelessWidget {

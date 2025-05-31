@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:prime_web/utils/constants.dart';
-import 'package:prime_web/provider/navigation_bar_provider.dart';
-import 'package:prime_web/ui/widgets/no_internet.dart';
+import 'package:sougou_app/utils/constants.dart';
+import 'package:sougou_app/provider/navigation_bar_provider.dart';
+import 'package:sougou_app/ui/widgets/no_internet.dart';
 import 'package:provider/provider.dart';
 
 class NoInternetWidget extends StatefulWidget {
