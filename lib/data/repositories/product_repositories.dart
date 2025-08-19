@@ -23,8 +23,7 @@ import '../model/sous_famille_model.dart' as sous_famille_model;
 class ProductRepository {
 
   Future<ProductsResponse> getProducts(int page) async {
-    final url = 'http://207.180.210.22:9000/api/v1/produits?page=$page&size=10&sortBy=id&sortDir=desc';
-
+    final url = 'http://207.180.210.22:9000/api/v1/produits?page=$page&size=10&sortBy=id&sortDir=DESC';
     try {
       final response = await ApiRequest.get(
         url: url,
@@ -77,6 +76,98 @@ class ProductRepository {
     }
   }
 
+  Future<ProductsResponse> getSearchProducts(String nom) async {
+    final url = 'http://207.180.210.22:9000/api/v1/produits/search/nom?nom=$nom';
+    try {
+      final response = await ApiRequest.get(
+        url: url,
+        headers: {
+          "Authorization": "Bearer ${auth_token.$ ?? ''}",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final decoded = json.decode(utf8.decode(response.bodyBytes));
+
+        if (decoded is Map<String, dynamic>) {
+          final corps = decoded['corps'];
+
+          if (corps is List) {
+            final produits = corps.map((e) => Produit.fromJson(e)).toList();
+            return ProductsResponse(
+              statusCode: decoded['statusCode']?.toString(),
+              message: decoded['message'],
+              corps: CorpsProduits(
+                produits: produits,
+                totalItems: produits.length,
+                totalPages: 1,
+                currentPage: 1,
+              ),
+            );
+          } else {
+            return ProductsResponse(
+              statusCode: "500",
+              message: "Format inattendu du champ 'corps'",
+              corps: CorpsProduits(
+                produits: [],
+                totalItems: 0,
+                totalPages: 0,
+                currentPage: 0,
+              ),
+            );
+          }
+        } else {
+          return ProductsResponse(
+            statusCode: "500",
+            message: "Format JSON racine inattendu",
+            corps: CorpsProduits(
+              produits: [],
+              totalItems: 0,
+              totalPages: 0,
+              currentPage: 0,
+            ),
+          );
+        }
+      } else {
+        return ProductsResponse(
+          statusCode: response.statusCode.toString(),
+          message: "Erreur serveur (${response.statusCode})",
+          corps: CorpsProduits(
+            produits: [],
+            totalItems: 0,
+            totalPages: 0,
+            currentPage: 0,
+          ),
+        );
+      }
+    } catch (e) {
+      return ProductsResponse(
+        statusCode: "500",
+        message: "Erreur lors de la récupération des produits: $e",
+        corps: CorpsProduits(
+          produits: [],
+          totalItems: 0,
+          totalPages: 0,
+          currentPage: 0,
+        ),
+      );
+    }
+  }
+
+
+
+  Future<ProductsResponse> productEdit({required String id}) async {
+    String url = "${EndPoints.getProductsById}/$id";
+
+    final response = await ApiRequest.get(
+      url: url,
+      headers: {
+        "Authorization": "Bearer ${auth_token.$}",
+      },
+    );
+
+    return productsResponseFromJson(response.body);
+  }
 
 
   Future<CommonResponse> postProducts(postBody) async {
@@ -109,16 +200,53 @@ class ProductRepository {
     }
   }
 
+  Future<CommonResponse> updateProducts(postBody, String id) async {
+    try {
+      String url = ("${EndPoints.getProductsById}/$id");
+      var reqHeader = {
+        "Authorization": "Bearer ${auth_token.$}",
+        "Content-Type": "application/json",
+        "Accept": "*/*"
+      };
+
+      print("🌐 POST vers $url");
+      print("🟨 Headers: $reqHeader");
+      print("📦 Body: $postBody");
+
+      final response = await ApiRequest.put(
+        url: url,
+        headers: reqHeader,
+        body: postBody,
+      );
+
+      print("📥 Status: ${response.statusCode}");
+      print("📥 Body: ${response.body}");
+
+      return commonResponseFromJson(response.body);
+    } catch (e, s) {
+      print("❌ Erreur dans postProducts: $e");
+      print("📍 Stack trace: $s");
+      rethrow;
+    }
+  }
 
 
-  productDeleteReq({required id}) async {
-    String url = ("${EndPoints.deleteProducts}/$id");
+  Future<DeleteModel> productDeleteReq({required String id}) async {
+    String url = "${EndPoints.deleteProducts}/$id";
 
-    final response = await ApiRequest.get(url: url, headers: {
+    final response = await ApiRequest.delete(url: url, headers: {
       "Authorization": "Bearer ${auth_token.$}",
+      "Accept": "application/json",
+      "Content-Type": "application/json; charset=utf-8",
     });
-    //print("product res  "+response.body.toString());
-    return deleteProductFromJson(response.body);
+
+    if (response.statusCode == 200) {
+      final decodedBody = utf8.decode(response.bodyBytes);
+      return deleteProductFromJson(decodedBody);
+    } else {
+      throw Exception("Erreur lors de la suppression : ${response.statusCode}");
+    }
+
   }
 
   Future<List<marques_model.Marque>> getMarque() async {
@@ -206,21 +334,24 @@ class ProductRepository {
     return secteurListFromJson(response.body);
   }
 
-  productStatusChangeReq({required id, status}) async {
-    String url = ("${EndPoints.postChangeStatus}");
+  productStatusChangeReq({required id, required bool status}) async {
+    String url = "${EndPoints.putProductStatus}/$id/${status ? "activer" : "desactiver"}";
 
-    var post_body = jsonEncode({"id": id, "status": status});
     var reqHeader = {
       "Authorization": "Bearer ${auth_token.$}",
-      "Content-Type": "application/json"
+      "Content-Type": "application/json; charset=utf-8",
     };
 
-    final response =
-    await ApiRequest.post(url: url, headers: reqHeader, body: post_body);
+    final response = await ApiRequest.put(url: url, headers: reqHeader);
 
-    //print("product res  "+response.body.toString());
-    return deleteProductFromJson(response.body);
+    if (response.statusCode == 200) {
+      final decodedBody = utf8.decode(response.bodyBytes);
+      return commonResponseFromJson(decodedBody);
+    } else {
+      throw Exception("Erreur lors du changement de statut : ${response.statusCode}");
+    }
   }
+
 
 
 /*Future<ProductsResponse> getWholesaleProducts({name = "", page = 1}) async {

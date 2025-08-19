@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:one_context/one_context.dart';
 import 'package:route_transitions/route_transitions.dart';
@@ -6,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sougou_app/ui/screens/auth/login.dart';
 import 'package:toast/toast.dart';
 
+import '../../data/model/auth_model.dart';
 import '../../data/repositories/auth_repositories.dart';
 import '../../helpers/shared_values.dart';
 import '../../my_theme.dart';
@@ -30,59 +33,51 @@ class _AccountState extends State<Account> with TickerProviderStateMixin {
   bool _faceData = false;
   bool _auctionExpand = false;
   bool _posExpand = false;
-
-
-  Future<bool> _getAccountInfo() async {
-    //ShopInfoHelper().setShopInfo();
-    setData();
-    return true;
-  }
-
-  getSellerPackage() async {
-    //var _shopInfo = await ShopRepository().getShopInfo();
-    //_package = _shopInfo.shopInfo!.sellerPackage;
-    //_packageImg = _shopInfo.shopInfo!.sellerPackageImg;
-    setState(() {});
-  }
-
-  setData() {
-    //Map<String, dynamic> json = jsonDecode(shop_info.$.toString());
-    // _url = shop_logo.$;
-    // _name = shop_name.$;
-    // _email = seller_email.$;
-    // _verify = shop_verify.$;
-    // _verified = _verify!
-    //     ? LangText(context: OneContext().context).getLocal().verified_ucf
-    //     : LangText(context: OneContext().context).getLocal().unverified_ucf;
-    // _rating = shop_rating.$;
-    _faceData = true;
-    setState(() {});
-  }
+  String nom = '';
+  String prenom = '';
+  String telephone = '';
+  bool isVerified = false;
+  String magasinNom = '';
+  String magasinVille = '';
 
   final ExpansionTileController expansionTileController =
   ExpansionTileController();
   logoutReq() async {
-    var response = await AuthRepository().getLogoutResponse();
-    if (response.token.isEmpty) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('auth_token'); // Supprime le token
-      await prefs.setBool('is_logged_in', false); // Met à jour l'état de connexion
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Deconnexion réussie !")),
-      );
-      Navigator.pushAndRemoveUntil(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => LoginPage(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-        ),
-            (route) => false,
-      );
-    } else {
+    try {
+      var response = await AuthRepository().getLogoutResponse();
+
+      if (response.codeText == "LOGOUT") {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove('auth_token');
+        await prefs.setBool('is_logged_in', false);
+        clearUserInfo();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Déconnexion réussie !")),
+        );
+
+        Navigator.pushAndRemoveUntil(
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => LoginPage(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+              (route) => false,
+        );
+      } else {
+        ToastComponent.showDialog(
+          response.message ?? "Une erreur est survenue.",
+          gravity: Toast.center,
+          duration: 3,
+          textStyle: TextStyle(color: MyTheme.black),
+        );
+      }
+    } catch (e) {
+      print(e);
       ToastComponent.showDialog(
-        response.message!,
+        "Erreur de déconnexion : $e",
         gravity: Toast.center,
         duration: 3,
         textStyle: TextStyle(color: MyTheme.black),
@@ -90,29 +85,37 @@ class _AccountState extends State<Account> with TickerProviderStateMixin {
     }
   }
 
-  faceData() {
-    _getAccountInfo();
-    getSellerPackage();
+  Future<void> _loadUserInfos() async {
+    final prefs = await SharedPreferences.getInstance();
+    final magasinJson = prefs.getString('user_default_magasin');
+    setState(() {
+      nom = prefs.getString('user_nom') ?? '';
+      prenom = prefs.getString('user_prenom') ?? '';
+      telephone = prefs.getString('user_telephone') ?? '';
+      isVerified = prefs.getBool('user_phone_verified') ?? false;
+      if (magasinJson != null) {
+        final magasin = jsonDecode(magasinJson);
+        magasinNom = magasin['nom'] ?? '';
+        magasinVille = magasin['ville'] ?? '';
+      }
+    });
   }
 
-  loadData() async {
-    if (shop_name.$ == "") {
-      _getAccountInfo();
-    } else {
-      setData();
-    }
+
+  Future<void> clearUserInfo() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('user_nom');
+    await prefs.remove('user_prenom');
+    await prefs.remove('user_telephone');
   }
 
   @override
   void initState() {
-    if (seller_package_addon.$) {
-      getSellerPackage();
-    }
-    loadData();
     controller =
         AnimationController(duration: const Duration(seconds: 1), vsync: this);
     animation = Tween(begin: 0.5, end: 1.0).animate(controller);
     super.initState();
+    _loadUserInfos();
   }
 
   @override
@@ -145,70 +148,87 @@ class _AccountState extends State<Account> with TickerProviderStateMixin {
                       backgroundColor: MyTheme.noColor,
                     ),
                     const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'GERARD KOFFI',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: MyTheme.white,
-                            decoration: TextDecoration.none, // Supprime tout soulignement
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '$prenom $nom',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: MyTheme.white,
+                              decoration: TextDecoration.none, // Supprime tout soulignement
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          '0789363632', // Gestion de null
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: MyTheme.app_accent_border.withOpacity(0.8),
-                            //decoration: TextDecoration.none,
+                          const SizedBox(height: 5),
+                          Text(
+                            telephone, // Gestion de null
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: MyTheme.app_accent_border.withOpacity(0.8),
+                              //decoration: TextDecoration.none,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            if (_faceData) // Utilisation de if au lieu de ternaire pour plus de clarté
-                              Image.asset(
-                                 'assets/icon/verify.png',
-                                width: 16,
-                                height: 15,
-                              ),
-                            if (_faceData) const SizedBox(width: 5),
-                            if (_faceData)
-                              Text(
-                                'Verifie', // Gestion de null
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: MyTheme.app_accent_border,
-                                  decoration: TextDecoration.none,
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              if (isVerified) ...[
+                                Image.asset(
+                                  'assets/icon/verify.png',
+                                  width: 16,
+                                  height: 15,
                                 ),
-                              ),
-                            // Gestion de null
-                              Row(
-                                children: [
-                                  const SizedBox(width: 10),
-                                  Image.asset(
-                                    'assets/icon/package.png',
-                                    width: 16,
-                                    height: 15,
+                                const SizedBox(width: 5),
+                                const Text(
+                                  'Vérifié',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: MyTheme.app_accent_border,
+                                    decoration: TextDecoration.none,
                                   ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    'GOLD', // Gestion de null
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: MyTheme.app_accent_border,
-                                      decoration: TextDecoration.none,
+                                ),
+                              ] else ...[
+                                Image.asset(
+                                  'assets/icon/unverify.png', // Remplace par ton icône d’utilisateur non vérifié
+                                  width: 16,
+                                  height: 15,
+                                ),
+                                const SizedBox(width: 5),
+                                const Text(
+                                  'Non vérifié',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.redAccent, // ou MyTheme.errorColor
+                                    decoration: TextDecoration.none,
+                                  ),
+                                ),
+                              ],
+                               Row(
+                                  children: [
+                                    const SizedBox(width: 10),
+                                    Image.asset(
+                                      'assets/icon/account.png',
+                                      width: 16,
+                                      height: 13,
+                                      color: Colors.white,
                                     ),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-                      ],
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      '$magasinNom', // Gestion de null
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: MyTheme.app_accent_border,
+                                        decoration: TextDecoration.none,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -362,7 +382,7 @@ class _AccountState extends State<Account> with TickerProviderStateMixin {
                   Row(
                     children: [
                       Image.asset(
-                        'assets/icon/social_setting.png',
+                        'assets/icon/account.png',
                         width: 16,
                         height: 16,
                         color: MyTheme.app_accent_border,

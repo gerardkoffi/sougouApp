@@ -69,4 +69,49 @@ class ApiRequest {
     return SougouApiResponse.check(response,
         middleware: middleware, groupMiddleWare: groupMiddleWare);
   }
+
+  static Future<http.Response> patch({
+    required String url,
+    Map<String, String>? headers,
+    String? body,
+    Middleware? middleware,
+    GroupMiddleware? groupMiddleWare,
+  }) async {
+    Uri uri = Uri.parse(url);
+    Map<String, String>? headerMap = commonHeader;
+    if (headers != null) {
+      headerMap.addAll(headers);
+    }
+
+    print("📤 PATCH vers $url");
+    print("🟨 Headers: $headerMap");
+    if (body != null) print("📦 Body: $body");
+
+    final response = await http.patch(uri, headers: headerMap, body: body);
+
+    print("✅ Réponse HTTP reçue: ${response.statusCode}");
+    print("📥 Body brut: ${response.body}");
+
+    return SougouApiResponse.check(
+      response,
+      middleware: middleware,
+      groupMiddleWare: groupMiddleWare,
+    );
+  }
+  static Future<http.Response> put({
+    required String url,
+    Map<String, String>? headers,
+    String? body,
+    Middleware? middleware,
+    GroupMiddleware? groupMiddleWare,
+  }) async {
+    Uri uri = Uri.parse(url);
+    Map<String, String>? headerMap = commonHeader;
+    if (headers != null) {
+      headerMap.addAll(headers);
+    }
+    final response = await http.put(uri, headers: headerMap, body: body);
+    return SougouApiResponse.check(response,
+        middleware: middleware, groupMiddleWare: groupMiddleWare);
+  }
 }

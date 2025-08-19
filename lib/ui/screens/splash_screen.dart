@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:sougou_app/cubit/fcm_cubit.dart';
 import 'package:sougou_app/cubit/get_onbording_cubit.dart';
 import 'package:sougou_app/cubit/get_setting_cubit.dart';
@@ -113,16 +114,30 @@ class _SplashScreenState extends State<SplashScreen> {
         return;
       }
 
-        final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      // Vérification du token
+      final token = pref.getString('auth_token');
       if (token != null && token.isNotEmpty) {
-        print("Mon token: $token");
+        final isExpired = JwtDecoder.isExpired(token);
+
+        if (isExpired) {
+          // Token expiré → suppression et redirection
+          await pref.remove('auth_token');
+          await pref.setBool('is_logged_in', false);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
+          return;
+        }
+
+        print("Token valide : $token");
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => Main()),
         );
       } else {
-        // ❌ Aucun token => Rediriger vers la page de Login
+        // Aucun token → page de login
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => LoginPage()),
@@ -132,6 +147,7 @@ class _SplashScreenState extends State<SplashScreen> {
       print('Error fetching settings: ${state.error}');
     }
   }
+
 
 
   Future<void> _retryConnection() async {

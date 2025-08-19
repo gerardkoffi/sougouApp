@@ -4,6 +4,7 @@ class EndPoints{
 
   //GET
   static String getProducts = '${dataUrl}produits';
+  static String getProductsById = '${dataUrl}produits';
   static String deleteProducts = '${dataUrl}produits';
   static String getMagasin = '${dataUrl}magasins';
   static String createMagasin = '${dataUrl}magasins';
@@ -18,6 +19,7 @@ class EndPoints{
 
   //POST
   static String postProduct = '${dataUrl}produits';
-  static String postChangeStatus = '${dataUrl}produits/change_status';
+  static String postAssortiment = '${dataUrl}assortiments';
+  static String putProductStatus = '${dataUrl}produits';
 
 }

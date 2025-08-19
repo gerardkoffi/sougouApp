@@ -261,7 +261,7 @@ class _HomeState extends State<Home> {
               height: 5,
             ),
             top4Boxes(),
-            buildPackageUpgradeContainer(context),
+            //buildPackageUpgradeContainer(context),
             SizedBox(
               height: AppStyles.listItemsMargin,
             ),
@@ -272,10 +272,8 @@ class _HomeState extends State<Home> {
             SizedBox(
               height: AppStyles.listItemsMargin,
             ),
-            packageContainer(),
-            Container(
-              height: AppStyles.spaceItem,
-            ),
+            //packageContainer(),
+
             //topProductsContainer(),
             SizedBox(
               height: AppStyles.listItemsMargin,
@@ -295,10 +293,10 @@ class _HomeState extends State<Home> {
             SizedBox(
               height: AppStyles.listItemsMargin,
             ),
-            buildPackageUpgradeContainer(context),
+          /*  buildPackageUpgradeContainer(context),
             Container(
               height: AppStyles.listItemsMargin,
-            ),
+            )*/
             //chartTopProductContainer(),
             packageContainer(),
             Container(
@@ -316,7 +314,7 @@ class _HomeState extends State<Home> {
               height: 5,
             ),
             topCA(),
-            buildPackageUpgradeContainer(context),
+            //buildPackageUpgradeContainer(context),
             Container(
               height: AppStyles.listItemsMargin,
             ),
@@ -337,7 +335,7 @@ class _HomeState extends State<Home> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             top4Boxes(),
-            buildPackageUpgradeContainer(context),
+            //buildPackageUpgradeContainer(context),
             SizedBox(
               height: AppStyles.listItemsMargin,
             ),

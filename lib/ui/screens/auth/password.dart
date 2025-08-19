@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sougou_app/ui/screens/dashboard.dart';
 import '../../../cubit/auth_cubit.dart';
+import '../../../data/model/auth_model.dart';
 import '../../custom/my_appbar.dart';
 
 class PasswordPage extends StatefulWidget {
@@ -59,7 +62,7 @@ class _PasswordPageState extends State<PasswordPage> {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthCubit, AuthState>(
-      listener: (context, state) {
+      listener: (context, state) async {
         if (state is AuthSuccess) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Connexion réussie !")),

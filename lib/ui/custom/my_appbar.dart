@@ -27,7 +27,9 @@ class MyAppBar {
               splashRadius: 15,
               padding: EdgeInsets.all(0.0),
               onPressed: () {
-                Navigator.pop(context!);
+                if (Navigator.canPop(context!)) {
+                  Navigator.pop(context!, true);
+                }
               },
               icon: Image.asset(
                 'assets/icon/back_arrow.png',

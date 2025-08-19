@@ -1,19 +1,31 @@
 
+import 'dart:convert';
+
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:one_context/one_context.dart';
 import 'package:route_transitions/route_transitions.dart';
+import 'package:sougou_app/data/model/auth_model.dart';
+import 'package:sougou_app/ui/screens/products/search_product.dart';
 import 'package:sougou_app/ui/screens/settings_screen/forfait_screen.dart';
+import 'package:sougou_app/ui/screens/updateProduct.dart';
 import 'package:toast/toast.dart';
 
+import '../../data/model/magasin_model.dart';
 import '../../data/model/product_model.dart';
 import '../../data/repositories/magasin_repositories.dart';
 import '../../data/repositories/product_repositories.dart';
 import '../../helpers/shimmerHelpers.dart';
 import '../../my_theme.dart';
+import '../../utils/decoration.dart';
 import '../custom/app_style.dart';
 import '../custom/buttoms.dart';
 import '../custom/commun_style.dart';
 import '../custom/devices_info.dart';
+import '../custom/dropdown_model.dart';
+import '../custom/input_decoration.dart';
+import '../custom/loading.dart';
 import '../custom/my_appbar.dart';
 import '../custom/my_widget.dart';
 import '../custom/route_transaction.dart';
@@ -45,7 +57,13 @@ class _ProductsState extends State<Products> {
 
   ScrollController _scrollController =
   new ScrollController(initialScrollOffset: 0);
-
+  List<CommonDropDownItem> magasins = [];
+  CommonDropDownItem? selectedMagasins;
+  TextEditingController  prixAchatEditTextController = TextEditingController();
+  TextEditingController  prixVenteEditTextController = TextEditingController();
+  String? id,magasinId;
+  int? prixAchat,prixVente;
+  bool? statu;
   // double variables
   double mHeight = 0.0, mWidht = 0.0;
   int _page = 0;
@@ -53,8 +71,9 @@ class _ProductsState extends State<Products> {
   int _totalItem = 0;
   int _currentPage = 0;
   int _restProduct = 0;
-  getProductList() async {
 
+
+  getProductList() async {
     var productResponse = await ProductRepository().getProducts(_page);
     print("📦 Réponse brute: $productResponse");
     _totalPages = productResponse.corps?.totalPages ?? 1;
@@ -80,71 +99,164 @@ class _ProductsState extends State<Products> {
     setState(() {});
   }
 
+  void _getMagasin() async {
+    try {
+      List<MagasinModel> magasinList = await MagasinRepository().getMagasins();
 
-  Future<bool> _getAccountInfo() async {
-    var response = await MagasinRepository().getMagasins();
+      // 🔁 Évite la duplication
+      magasins.clear();
 
-    if (response.corps == null) {
-      // Gérer le cas où il n'y a pas de magasin
-      //_currentMagasinName = "Nom non disponible";
+      magasins = magasinList
+          .map((e) => CommonDropDownItem("${e.id}", e.nom))
+          .toList();
+
       setState(() {});
-      return false;
+    } catch (e) {
+      print("Erreur chargement magasins : $e");
     }
-
-    _currentMagasinName = response.corps!.nom ?? "Nom non disponible";
-    setState(() {});
-    return true;
   }
 
 
-/*  getProductRemainingUpload() async {
-    var productResponse = await ProductRepository().remainingUploadProducts();
-    _remainingProduct = productResponse.ramainingProduct.toString();
-
-    setState(() {});
-  }
-
-  duplicateProduct(int? id) async {
-    loading();
-    var response = await ProductRepository().productDuplicateReq(id: id);
-    Navigator.pop(loadingContext);
-    if (response.result) {
-      resetAll();
-    }
-    ToastComponent.showDialog(
-      response.message,
-      gravity: Toast.center,
-      duration: 3,
-      textStyle: TextStyle(color: MyTheme.black),
-    );
-  }*/
-
-  deleteProduct(int? id) async {
+  deleteProduct(String id) async {
     loading();
     var response = await ProductRepository().productDeleteReq(id: id);
     Navigator.pop(loadingContext);
-    if (response.result) {
+
+    if (response.statusCode == '200' && response.codeText == 'DELETE') {
       resetAll();
     }
+
     ToastComponent.showDialog(
       response.message,
       gravity: Toast.center,
       duration: 3,
       textStyle: TextStyle(color: MyTheme.black),
     );
+  }
+
+  setAssotimentValues() async {
+    id;
+    magasinId;
+    statu;
+    prixAchat;
+    prixVente;
+
+    if (selectedMagasins != null) magasinId = selectedMagasins?.key;
+    prixAchat = int.tryParse(prixAchatEditTextController.text.trim()) ?? 0;
+    prixVente = int.tryParse(prixVenteEditTextController.text.trim()) ?? 0;
+    statu = true;
+
+  }
+  bool requiredFieldVerification() {
+    if (prixAchatEditTextController.text.trim().isEmpty) {
+      _showToast("prix d'achat requis");
+      return false;
+    } else if (selectedMagasins == null) {
+      _showToast("Le magasin est requis");
+      return false;
+    } else if (prixVenteEditTextController.text.trim().isEmpty) {
+      _showToast("prix de vente requis");
+      return false;
+    }else if (int.tryParse(prixVenteEditTextController.text.trim())! < int.tryParse(prixAchatEditTextController.text.trim())! ){
+      _showToast("Prix Vente inferieur au Prix Achat");
+      return false;
+    }
+    return true;
+  }
+
+  void _showToast(String message) {
+    if (OneContext.hasContext) {
+      ToastComponent.showDialog(
+        message,
+        gravity: Toast.center,
+      );
+    } else {
+      debugPrint("Toast non affiché car OneContext n’est pas prêt : $message");
+    }
+  }
+
+
+  Future<void> submitAssortiment(String button ,String productId) async {
+    if (!requiredFieldVerification()) return;
+
+    print("📍 setProductValues");
+    await setAssotimentValues();
+
+    print("📍 Validation des champs obligatoires");
+    if (prixAchat == null || prixVente == null || magasinId == null) {
+      Loading.hide();
+      ToastComponent.showDialog(
+        "Certains champs obligatoires sont manquants",
+        gravity: Toast.center,
+      );
+      return;
+    }
+
+    final postValue = {
+
+      "produitId": productId ?? '',
+      "magasinId": magasinId ?? '',
+      "statut": statu ?? '',
+      "prixAchat": prixAchat ?? '',
+      "prixVente": prixVente ?? '',
+    };
+
+    try {
+      await Loading.show(context, timeout: Duration(seconds: 3));
+      final postBody = jsonEncode(postValue);
+      print("📤 Envoi postBody: $postBody");
+
+      final response = await MagasinRepository().postAssortiment(postBody);
+
+      print("✅ Réponse reçue: ${response.toString()}");
+      Loading.hide();
+
+      if (response.statusCode == '200' && response.corps != null) {
+        ToastComponent.showDialog("Le produit enregistre", gravity: Toast.center);
+
+        final productId = response.corps["id"]; // <- Assure-toi que ton backend retourne bien l'id
+        if (productId != null) {
+          print("🧪 corps: ${response.corps} (${response.corps.runtimeType})");
+        }
+        // Petite pause pour laisser le temps de voir le toast
+        await Future.delayed(Duration(seconds: 1));
+
+        // Revenir à la page précédente
+        if (Navigator.canPop(context)) {
+          Navigator.pop(context, true);
+        }
+      }
+      else {
+        final errorMessages = response.message;
+        if (errorMessages is String) {
+          ToastComponent.showDialog(errorMessages, gravity: Toast.center);
+        } else if (errorMessages is List) {
+          ToastComponent.showDialog(errorMessages, gravity: Toast.center);
+        } else {
+          ToastComponent.showDialog("Une erreur est survenue", gravity: Toast.center);
+        }
+      }
+    } catch (e, s) {
+      print("❌ Exception: $e");
+      print("📍 Stack: $s");
+      Loading.hide();
+      ToastComponent.showDialog("Erreur: ${e.toString()}", gravity: Toast.center);
+    }
   }
 
   productStatusChange(int? index, bool value, setState, id) async {
     loading();
-    var response = await ProductRepository()
-        .productStatusChangeReq(id: id, status: value ? 1 : 0);
+    var response = await ProductRepository().productStatusChangeReq(
+      id: id,
+      status: value, // true = activer, false = désactiver
+    );
     Navigator.pop(loadingContext);
-    if (response.result) {
-      // _productStatus[index] = value;
-      //_productList[index!].status = value;
+
+    if (response.statusCode == "200") {
       resetAll();
     }
     Navigator.pop(switchContext);
+
     ToastComponent.showDialog(
       response.message,
       gravity: Toast.center,
@@ -152,6 +264,7 @@ class _ProductsState extends State<Products> {
       textStyle: TextStyle(color: MyTheme.black),
     );
   }
+
 
 
   scrollControllerPosition() {
@@ -193,7 +306,7 @@ class _ProductsState extends State<Products> {
 
   fetchAll() {
     getProductList();
-    _getAccountInfo();
+    _getMagasin();
     _restProduct = _remainingProduct - _totalItem;
     //getProductRemainingUpload();
     setState(() {});
@@ -219,31 +332,33 @@ class _ProductsState extends State<Products> {
 
   _tabOption(int index, productId, listIndex) {
     switch (index) {
-      /*case 0:
+      case 0:
+        showAssotimentDialog(productId);
+        break;
+      case 1:
         slideRightWidget(
             newPage: UpdateProduct(
               productId: productId,
+                siModifie: true, siNouveau: false
             ),
             context: context)
             .then((value) {
           resetAll();
-        });*/
-        //break;
-      case 1:
-        showPublishUnPublishDialog(listIndex, productId);
+        });
         break;
       case 2:
-        showDeleteWarningDialog(productId);
-        //deleteProduct(productId);
+        showPublishUnPublishDialog(listIndex, productId);
         break;
       case 3:
-        print(productId);
-        //duplicateProduct(productId);
+        showDeleteWarningDialog(productId);
         break;
       default:
+        print("index par défaut: $index");
         break;
+
     }
   }
+
 
   @override
   void initState() {
@@ -277,9 +392,12 @@ class _ProductsState extends State<Products> {
                   height: 20,
                 ),
                 buildTop2BoxContainer(context),
+                SizedBox(
+                  height: 20,
+                ),
                 Visibility(
                     visible: true,
-                    child: buildPackageUpgradeContainer(context)),
+                    child: buildPackageSearchField(context)),
                 SizedBox(
                   height: 20,
                 ),
@@ -300,7 +418,7 @@ class _ProductsState extends State<Products> {
                                 ),
                                 Row(
                                   children: [
-                                    _page == _totalPages-2?
+                                    _page == 0 ?
                                     IconButton(
                                       onPressed: () async{
                                         //backresetAll();
@@ -366,74 +484,51 @@ class _ProductsState extends State<Products> {
       ),
     );
   }
-  Widget buildPackageUpgradeContainer(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          height: AppStyles.itemMargin,
-        ),
-        MyWidget().myContainer(
-            marginY: 15,
-            height: 40,
-            width: DeviceInfo(context).getWidth(),
-            borderRadius: 6,
-            borderColor: MyTheme.accent_color,
-            bgColor: MyTheme.white,
-            child: InkWell(
-              onTap: () {
-                MyTransaction(context: context).push(Packages());
-              },
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Row(
-                    children: [
-                      Image.asset("assets/icon/shop_setting.png",
-                        height: 20, width: 20, color: MyTheme.app_accent_color,),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text("Magasin:",
-                        style: TextStyle(fontSize: 12, color: MyTheme.grey_153),
-                      ),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text(
-                        _currentMagasinName!,
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: MyTheme.app_accent_color,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    width: 5,
-                  ),
-                  Row(
-                    children: [
-                      Text("Changer",
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: MyTheme.app_accent_color,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(
-                        width: 8,
-                      ),
-                      Image.asset("assets/icon/next_arrow.png",
-                          color: MyTheme.app_accent_color,
-                          height: 8.7,
-                          width: 7),
-                    ],
-                  ),
-                ],
+  Widget buildPackageSearchField(BuildContext context) {
+    return MyWidget().myContainer(
+      marginY: 15,
+      height: 40,
+      width: DeviceInfo(context).getWidth(),
+      borderRadius: 20,
+      borderColor: MyTheme.accent_color,
+      bgColor: MyTheme.white,
+      child: InkWell(
+        onTap: () async {
+          final result = await MyTransaction(context: context)
+              .push(SearchProducts());
+          if (result == true) {
+            resetAll(); // recharge les produits à partir de la page 0
+          }
+        },
+        child: Row(
+          children: [
+            SizedBox(width: 10),
+            Image.asset(
+              "assets/icon/search.png",
+              height: 20,
+              width: 20,
+              color: MyTheme.app_accent_color,
+            ),
+            SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                "Recherchez un produit ...",
+                style: TextStyle(
+                  fontSize: 13,
+                  color: _currentMagasinName == null
+                      ? MyTheme.grey_153
+                      : MyTheme.app_accent_color,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            )),
-      ],
+            ),
+          ],
+        ),
+      ),
     );
   }
+
+
 
   Container buildTop2BoxContainer(BuildContext context) {
     return Container(
@@ -540,6 +635,7 @@ class _ProductsState extends State<Products> {
                   productItem(
                     index: index,
                     productId: _productList[index].id,
+                    photoUrl:_productList[index].fullPhotoUrl,
                     code: _productList[index].code,
                     nomProduit: _productList[index].nom,
                     description: _productList[index].description,
@@ -562,7 +658,7 @@ class _ProductsState extends State<Products> {
   Container productItem(
       {int? index,
         required String productId,
-        //String? imageUrl,
+        required String photoUrl,
         required String code,
         required String nomProduit,
         required String description,
@@ -589,21 +685,22 @@ class _ProductsState extends State<Products> {
         borderRadius: 6,
         child: InkWell(
           onTap: () {
+            print(photoUrl);
             //MyTransaction(context: context).push(NewProduct(siModifie:false, siNouveau:true));
           },
           child: Row(
             children: [
+              SizedBox(
+                width: 2,
+              ),
               MyWidget.imageWithPlaceholder(
-                width: 84.0,
+                width: 80.0,
                 height: 90.0,
                 fit: BoxFit.cover,
-                url: null,
-                radius: BorderRadius.only(
-                  topLeft: Radius.circular(5),
-                  bottomLeft: Radius.circular(5),
-                ),
+                url: photoUrl,
+                radius: BorderRadius.circular(5),
               ),
-              // Image.asset(ImageUrl,width: 80,height: 80,fit: BoxFit.contain,),
+               //Image.asset(photoUrl,width: 80,height: 80,fit: BoxFit.contain,),
               SizedBox(
                 width: 11,
               ),
@@ -685,7 +782,7 @@ class _ProductsState extends State<Products> {
                           Row(
                             children: [
                               Text(
-                                  "En ligne",
+                                  "Activé",
                                   style: TextStyle(
                                       fontSize: 12,
                                       color: MyTheme.font_grey,
@@ -704,7 +801,7 @@ class _ProductsState extends State<Products> {
                           Row(
                             children: [
                               Text(
-                                  "Hors ligne",
+                                  "Desactivé",
                                   style: TextStyle(
                                       fontSize: 12,
                                       color: MyTheme.font_grey,
@@ -731,48 +828,277 @@ class _ProductsState extends State<Products> {
         )) as Container;
   }
 
-  showDeleteWarningDialog(id) {
+  Widget _buildDropDownField(String title, dynamic onchange,
+      CommonDropDownItem? selectedValue, List<CommonDropDownItem> itemList,
+      {bool isMandatory = false, double? width}) {
+    return buildCommonSingleField(
+        title, _buildDropDown(onchange, selectedValue, itemList, width: width),
+        isMandatory: isMandatory);
+  }
+  buildCommonSingleField(title, Widget child, {isMandatory = false}) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            buildFieldTitle(title),
+            if (isMandatory)
+              Text(
+                " *",
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: MyTheme.red),
+              ),
+          ],
+        ),
+        const SizedBox(
+          height: 10,
+        ),
+        child,
+      ],
+    );
+  }
+
+  setChange() {
+    setState(() {});
+  }
+
+  Text buildFieldTitle(title) {
+    return Text(
+      title,
+      style: const TextStyle(
+          fontSize: 12, fontWeight: FontWeight.bold, color: MyTheme.font_grey),
+    );
+  }
+  Widget _buildDropDown(dynamic onchange, CommonDropDownItem? selectedValue,
+      List<CommonDropDownItem> itemList,
+      {double? width}) {
+    return DropdownButton2<CommonDropDownItem>(
+      isExpanded: true,
+      value: selectedValue,
+      onChanged: (CommonDropDownItem? value) {
+        onchange(value);
+      },
+      underline: SizedBox(), // ✅ Ceci supprime complètement le trait
+      items: itemList.map((CommonDropDownItem item) {
+        return DropdownMenuItem<CommonDropDownItem>(
+          value: item,
+          child: Text(item.value!),
+        );
+      }).toList(),
+      buttonStyleData: ButtonStyleData(
+        height: 46,
+        width: width ?? mWidht,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        decoration: MDecoration.decoration1(),
+      ),
+      dropdownStyleData: DropdownStyleData(
+        maxHeight: 300,
+        decoration: BoxDecoration(
+          color: Colors.grey[100], // ✅ Couleur de fond du menu déroulant
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      iconStyleData: const IconStyleData(
+        icon: Icon(Icons.arrow_drop_down),
+      ),
+      style: TextStyle(color: MyTheme.app_accent_color),
+    );
+  }
+  Widget itemSpacer({double height = 24}) {
+    return SizedBox(
+      height: height,
+    );
+  }
+  Widget buildIntTextField(
+      String title,
+      String hint,
+      TextEditingController controller, {
+        bool isMandatory = false,
+      }) {
+    return Container(
+      child: buildCommonSingleField(
+        title,
+        MyWidget.customCardView(
+          backgroundColor: MyTheme.white,
+          elevation: 5,
+          width: DeviceInfo(context).getWidth(),
+          height: 46,
+          borderRadius: 10,
+          child: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            decoration: InputDecorations.buildInputDecoration_1(
+              hint_text: hint,
+              borderColor: MyTheme.noColor,
+              hintTextColor: MyTheme.grey_153,
+            ),
+            style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: MyTheme.app_accent_color
+            ),
+          ),
+        ),
+        isMandatory: isMandatory,
+      ),
+    );
+  }
+
+  void showAssotimentDialog(id) {
+
+    prixAchatEditTextController.clear();
+    prixVenteEditTextController.clear();
+    selectedMagasins = null;
     showDialog(
-        context: context,
-        builder: (context) => Container(
-          width: DeviceInfo(context).getWidth() * 1.5,
-          child: AlertDialog(
-            title: Text(
-              "Attention",
-              style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: MyTheme.red),
-            ),
-            content: Text(
-              "Voullez-vous supprimer ce produit?",
-              style: const TextStyle(
-                  fontWeight: FontWeight.w400, fontSize: 14),
-            ),
-            actions: [
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Center(
+                child: Text(
+                  "Ajoutez l'assortiment",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: MyTheme.accent_color,
+                  ),
+                ),
+              ),
+              content: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Attribuer le produit à un magasin",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w400,
+                        fontSize: 14,
+                      ),
+                    ),
+                    itemSpacer(),
+                    _buildDropDownField(
+                      "Magasin",
+                          (value) {
+                        setState(() {
+                          selectedMagasins = value;
+                        });
+                      },
+                      selectedMagasins,
+                      magasins,
+                      isMandatory: true
+                    ),
+                    itemSpacer(),
+                    buildIntTextField(
+                      "Prix d'achat",
+                      "Entrez le prix d'achat",
+                      prixAchatEditTextController,
+                      isMandatory: true,
+                    ),
+                    itemSpacer(),
+                    buildIntTextField(
+                      "Prix de vente",
+                      "Entrez le prix de vente",
+                      prixVenteEditTextController,
+                      isMandatory: true,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Buttons(
+                      color: MyTheme.red,
+                      padding: EdgeInsets.symmetric(horizontal: 15),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        "Annuler",
+                        style: TextStyle(color: MyTheme.white, fontSize: 14, fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    Buttons(
+                      color: MyTheme.app_accent_color,
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      onPressed: () {
+                        submitAssortiment("Valider", id);
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        "Valider",
+                        style: TextStyle(color: MyTheme.white, fontSize: 14,fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+
+
+  void showDeleteWarningDialog(id) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(
+          "Attention",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+            color: MyTheme.red,
+          ),
+        ),
+        content: Text(
+          "Voulez-vous supprimer ce produit ?",
+          style: TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 14,
+          ),
+        ),
+        actions: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
               Buttons(
-                  color: MyTheme.app_accent_color,
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: Text(
-                   "Non",
-                    style: TextStyle(color: MyTheme.white, fontSize: 12),
-                  )),
+                color: MyTheme.app_accent_color,
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: Text(
+                  "Non",
+                  style: TextStyle(color: MyTheme.white, fontSize: 12),
+                ),
+              ),
               Buttons(
-                  color: MyTheme.app_accent_color,
-                  onPressed: () {
-                    Navigator.pop(context);
-                    deleteProduct(id);
-                  },
-                  child: Text(
-                      "Oui",
-                      style:
-                      TextStyle(color: MyTheme.white, fontSize: 12))),
+                color: MyTheme.app_accent_color,
+                onPressed: () {
+                  Navigator.pop(context);
+                  deleteProduct(id);
+                },
+                child: Text(
+                  "Oui",
+                  style: TextStyle(color: MyTheme.white, fontSize: 12),
+                ),
+              ),
             ],
           ),
-        ));
+        ],
+      ),
+    );
   }
+
 
   Widget showOptions({listIndex, productId}) {
     return Container(
@@ -800,20 +1126,20 @@ class _ProductsState extends State<Products> {
         },
         itemBuilder: (BuildContext context) => <PopupMenuEntry<MenuOptions>>[
           PopupMenuItem<MenuOptions>(
+            value: MenuOptions.Assortiment,
+            child: Text("Assortiment"),
+          ),
+          PopupMenuItem<MenuOptions>(
             value: MenuOptions.Edit,
             child: Text("Modifier"),
           ),
           PopupMenuItem<MenuOptions>(
             value: MenuOptions.Published,
-            child: Text("Mettre en ligne"),
+            child: Text("Changer le status"),
           ),
           PopupMenuItem<MenuOptions>(
             value: MenuOptions.Delete,
             child: Text("Supprimer"),
-          ),
-          PopupMenuItem<MenuOptions>(
-            value: MenuOptions.Duplicate,
-            child: Text("Dupliquer"),
           ),
         ],
       ),
@@ -835,8 +1161,8 @@ class _ProductsState extends State<Products> {
                   children: [
                     Text(
                       _productList[index!].statut
-                          ? "En ligne"
-                          : "Non en ligne",
+                          ? "Desactiver ?"
+                          : "Activer ?",
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
@@ -902,4 +1228,4 @@ class _ProductsState extends State<Products> {
   }
 }
 
-enum MenuOptions { Edit, Published, Featured, Delete, Duplicate }
+enum MenuOptions { Assortiment, Edit, Published, Delete}

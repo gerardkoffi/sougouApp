@@ -2,9 +2,11 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:dio/dio.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:one_context/one_context.dart';
@@ -91,6 +93,7 @@ class _NewProductState extends State<NewProduct> {
   var mainCategoryId;
   List categoryIds = [];
   String?
+  id,
   code,
   nom,
   photoUrl,
@@ -125,6 +128,36 @@ class _NewProductState extends State<NewProduct> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
+  Future<void> uploadImage(String productId) async {
+    if (_selectedImage == null) return;
+
+    try {
+      print("📤 Upload de l'image...");
+
+      FormData formData = FormData.fromMap({
+        'file': await MultipartFile.fromFile(_selectedImage!.path),
+      });
+
+      final response = await Dio().post(
+        'http://207.180.210.22:9000/api/v1/produits/$productId/photo',
+        data: formData,
+        options: Options(
+          headers: {
+            "accept": "*/*",
+            "Content-Type": "multipart/form-data",
+          },
+        ),
+      );
+
+      print("✅ Image uploadée: ${response.statusCode}");
+    } catch (e, s) {
+      print("❌ Erreur d'upload : $e");
+      print("📍 Stack: $s");
+    }
+  }
+
+
+
   Future<void> _pickImage() async {
     final picked = await _picker.pickImage(source: ImageSource.camera);
     if (picked != null) {
@@ -133,6 +166,7 @@ class _NewProductState extends State<NewProduct> {
       });
     }
   }
+
 
   DateTimeRange? dateTimeRange =
   DateTimeRange(start: DateTime.now(), end: DateTime.now());
@@ -279,153 +313,10 @@ class _NewProductState extends State<NewProduct> {
     return await pickImage.pickImage(source: ImageSource.gallery);
   }
 
-/*  createProductVariation() {
-    productVariations.clear();
 
-    if (selectedColors.isNotEmpty) {
-      selectedColors.forEach((colors) {
-        // add attribute with color;
-        var colorName = colors.value;
-        List<String> attributeList = generateAttributeVariation();
-        if (attributeList.isNotEmpty) {
-          attributeList.forEach((element) {
-            print(element);
-            productVariations.add(VariationModel(
-                colorName! + "-" + element,
-                FileInfo(),
-                TextEditingController(
-                    text: unitPriceEditTextController.text.trim().toString()),
-                TextEditingController(text: "0"),
-                TextEditingController(),
-                false));
-          });
-        } else {
-          productVariations.add(VariationModel(
-              colorName,
-              FileInfo(),
-              TextEditingController(
-                  text: unitPriceEditTextController.text.trim().toString()),
-              TextEditingController(text: "0"),
-              TextEditingController(),
-              false));
-        }
-      });
-    } else {
-      List<String> attributeList = generateAttributeVariation();
-
-      if (attributeList.isNotEmpty) {
-        attributeList.forEach((element) {
-          productVariations.add(VariationModel(
-              element,
-              null,
-              TextEditingController(
-                  text: unitPriceEditTextController.text.trim().toString()),
-              TextEditingController(text: "10"),
-              TextEditingController(),
-              false));
-        });
-      }
-    }
-  }
-
-  List<String> generateAttributeVariation() {
-    var variationColumn = 1;
-
-    selectedAttributes.forEach((element) {
-      if (element.selectedAttributeItems.isNotEmpty) {
-        variationColumn =
-            variationColumn * element.selectedAttributeItems.length;
-      }
-    });
-
-    List<String> mList = [];
-
-    for (int i = 0; i < selectedAttributes.length; i++) {
-      for (int j = 0;
-      j < selectedAttributes[i].selectedAttributeItems.length;
-      j++) {
-        if (i == 0) {
-          for (int k = 0;
-          k <
-              (variationColumn /
-                  selectedAttributes[i].selectedAttributeItems.length);
-          k++) {
-            var value = selectedAttributes[i]
-                .selectedAttributeItems[j]
-                .value!
-                .replaceAll(" ", "");
-            mList.add(value);
-          }
-        } else {
-          for (int l = j;
-          l < mList.length;
-          l = l + selectedAttributes[i].selectedAttributeItems.length) {
-            String tmp = mList[l] +
-                "-" +
-                selectedAttributes[i]
-                    .selectedAttributeItems[j]
-                    .value!
-                    .replaceAll(" ", "");
-            mList[l] = tmp;
-          }
-        }
-      }
-    }
-
-    return mList;
-  }
-
-  setProductPhotoValue() {
-    photos = "";
-    for (int i = 0; i < productGalleryImages.length; i++) {
-      if (i != (productGalleryImages.length - 1)) {
-        photos = "$photos " + "${productGalleryImages[i].id},";
-      } else {
-        photos = "$photos " + "${productGalleryImages[i].id}";
-      }
-    }
-  }
-
-  setColors() {
-    colors = [];
-    selectedColors.forEach((element) {
-      colors!.add(element.key);
-    });
-  }
-
-  setChoiceAtt() {
-    choiceAttributes = [];
-    choiceNo = [];
-    choice = [];
-    choice_options.clear();
-
-    selectedAttributes.forEach((element) {
-      choiceAttributes!.add(element.name.key);
-      choiceNo!.add(element.name.key);
-      choice!.add(element.name.value);
-
-      List<String?> tmpValue = [];
-      element.selectedAttributeItems.forEach((attributes) {
-        tmpValue.add(attributes.value);
-      });
-      choice_options.addAll({"choice_options_${element.name.key}": tmpValue});
-    });
-
-    choiceAttributes!.sort();
-  }
-
-  setTaxes() {
-    taxType = [];
-    tax = [];
-    taxId = [];
-    vatTaxList.forEach((element) {
-      taxId!.add(element.vatTaxModel.id);
-      tax!.add(element.amount.text.trim().toString());
-      if (element.selectedItem != null) taxType!.add(element.selectedItem!.key);
-    });
-  }*/
 
   setProductValues() async {
+    id;
     code;
     nom;
     description;
@@ -461,7 +352,7 @@ class _NewProductState extends State<NewProduct> {
     tags!.forEach((element) {
       tagMap.add(jsonEncode({"value": '$element'}));
     });
-    statut = isStatut ? true : false;
+    statut = true;
     siReactive = isReative ? true : false;
     //setTaxes();
   }
@@ -529,7 +420,7 @@ class _NewProductState extends State<NewProduct> {
       'siModifie': widget.siModifie,
       'siNouveau': widget.siNouveau,
       'siReactive': siReactive ?? false,
-      'photoUrl' : photoUrl,
+      'photoUrl': _selectedImage?.path ?? '',
     };
 
     try {
@@ -545,6 +436,11 @@ class _NewProductState extends State<NewProduct> {
       if (response.statusCode == '200' && response.codeText == 'CREATION' && response.corps != null) {
         ToastComponent.showDialog("Le produit enregistre", gravity: Toast.center);
 
+        final productId = response.corps["id"]; // <- Assure-toi que ton backend retourne bien l'id
+        if (productId != null) {
+          print("🧪 corps: ${response.corps} (${response.corps.runtimeType})");
+          await uploadImage(productId);
+        }
         // Petite pause pour laisser le temps de voir le toast
         await Future.delayed(Duration(seconds: 1));
 
@@ -607,7 +503,10 @@ class _NewProductState extends State<NewProduct> {
   BottomAppBar buildBottomAppBar(BuildContext context) {
     return BottomAppBar(
       child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
           color: MyTheme.app_accent_color,
+        ),
           width: mWidht / 3,
           child: Buttons(
               onPressed: () async {
@@ -708,7 +607,8 @@ class _NewProductState extends State<NewProduct> {
                       (value) {
                     selectedOrigine = value;
                     setChange();
-                  }, selectedOrigine, origines),),
+                  }, selectedOrigine, origines),
+              ),
             ],
           ),
           itemSpacer(),
@@ -722,8 +622,8 @@ class _NewProductState extends State<NewProduct> {
               ),),
               SizedBox(width: 10,),
               Expanded(child: buildIntTextField(
-                  "Poids du produit",
-                  "Poids",
+                  "Poids du produit (Kg)",
+                  "Poids (Kg)",
                   poidsEditTextController),),
             ],
           ),
@@ -749,20 +649,18 @@ class _NewProductState extends State<NewProduct> {
             isMandatory: true,
           ),
           itemSpacer(),
-          Row(
-            children: [
-              Expanded(child:SizedBox() ),
-              SizedBox(width: 10,),
-              Expanded(child:buildSwitchField(
-                  "Status",
-                  isStatut, (value) {
-                isStatut = value;
-                setChange();
-              }), ),
-            ],
-          ),
-          itemSpacer(),
-
+          // Row(
+          //   children: [
+          //     Expanded(child:SizedBox() ),
+          //     SizedBox(width: 10,),
+          //     Expanded(child:buildSwitchField(
+          //         "Status",
+          //         isStatut, (value) {
+          //       isStatut = value;
+          //       setChange();
+          //     }), ),
+          //   ],
+          // ),
           GestureDetector(
             onTap: _pickImage,
             child: Container(
@@ -787,6 +685,7 @@ class _NewProductState extends State<NewProduct> {
                   : null,
             ),
           ),
+          itemSpacer(),
         ],
       ),
     );

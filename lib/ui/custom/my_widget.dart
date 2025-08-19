@@ -158,7 +158,7 @@ class MyWidget {
         BoxBorder? border,
         width = 0.0,
         BorderRadiusGeometry radius = BorderRadius.zero,
-        BoxFit fit = BoxFit.cover,
+        BoxFit fit = BoxFit.contain,
         Color backgroundColor = Colors.white}) {
     return Material(
       color: backgroundColor,
@@ -186,7 +186,7 @@ class MyWidget {
                     borderRadius: radius,
                     image: const DecorationImage(
                         image: AssetImage("assets/icons/logo.png"),
-                        fit: BoxFit.cover)),
+                        fit: BoxFit.contain)),
               );
             },
             width: width,

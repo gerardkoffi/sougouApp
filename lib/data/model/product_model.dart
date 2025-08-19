@@ -133,6 +133,7 @@ class Produit {
     required this.siReactive,
     this.photoUrl,
   });
+  String get fullPhotoUrl => "http://207.180.210.22:9000/api/v1/produits/$id/photo";
 
   factory Produit.fromJson(Map<String, dynamic> json) {
     return Produit(
@@ -140,7 +141,7 @@ class Produit {
       code: json['code'],
       nom: json['nom'],
       description: json['description'],
-      statut: json['statut'],
+      //statut: json['statut'],
       colisage: json['colisage'],
       poids: json['poids'],
       marqueId: json['marqueId'],
@@ -163,9 +164,10 @@ class Produit {
           : null,
       libelleReduit: json['libelleReduit'],
       motDirecteur: json['motDirecteur'],
-      siModifie: json['siModifie'],
-      siNouveau: json['siNouveau'],
-      siReactive: json['siReactive'],
+      statut: json["statut"] ?? false,
+      siModifie: json["siModifie"] ?? false,
+      siNouveau: json["siNouveau"] ?? false,
+      siReactive: json["siReactive"] ?? false,
       photoUrl: json['photoUrl'],
     );
   }

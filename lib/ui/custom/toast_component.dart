@@ -18,12 +18,12 @@ class ToastComponent {
         msg,
         duration: duration != 0 ? duration : Toast.lengthLong,
         gravity: gravity != 0 ? gravity : Toast.bottom,
-        backgroundColor: bgColor,
+        backgroundColor: Colors.white,
         textStyle: textStyle,
         border: Border.all(
-          color: const Color.fromRGBO(203, 209, 209, 1),
+          color: MyTheme.accent_color,
         ),
-        backgroundRadius: 6,
+        backgroundRadius: 15,
       );
     } else {
       debugPrint("⚠️ OneContext not ready: toast not shown");

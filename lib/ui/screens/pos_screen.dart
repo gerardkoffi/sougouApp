@@ -840,7 +840,7 @@ class _PosManagerState extends State<PosManager> {
 
   Widget buildSelectCategoryBrand(setState) {
     return SizedBox(
-      height: 70,
+      height: 75,
       width: double.infinity,
       child: Column(
         children: [
@@ -850,7 +850,7 @@ class _PosManagerState extends State<PosManager> {
               Expanded(
                 flex: 1,
                 child: Text(
-                  "Categories",
+                  "Secteur",
                   style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -860,7 +860,7 @@ class _PosManagerState extends State<PosManager> {
               Expanded(
                 flex: 1,
                 child: Text(
-                  "Marques",
+                  "Famille",
                   style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
