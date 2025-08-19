@@ -17,7 +17,7 @@ import 'package:sougou_app/ui/widgets/no_internet.dart';
 import 'package:sougou_app/utils/constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'dashboard.dart';
+import 'home/dashboard.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

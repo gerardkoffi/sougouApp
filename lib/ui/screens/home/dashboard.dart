@@ -4,15 +4,15 @@ import 'dart:ui';
 import 'package:flutter/services.dart';
 import 'package:route_transitions/route_transitions.dart';
 import 'package:sougou_app/ui/screens/SelsScreen.dart';
-import 'package:sougou_app/ui/screens/accountScreen.dart';
-import 'package:sougou_app/ui/screens/productsScreen.dart';
-import '../../my_theme.dart';
-import '../custom/commun_function.dart';
-import '../custom/commun_style.dart';
-import '../custom/customerDateTimes.dart';
-import '../custom/route_transaction.dart';
+import 'package:sougou_app/ui/screens/home/accountScreen.dart';
+import 'package:sougou_app/ui/screens/products/productsScreen.dart';
+import '../../../my_theme.dart';
+import '../../custom/commun_function.dart';
+import '../../custom/commun_style.dart';
+import '../../custom/customerDateTimes.dart';
+import '../../custom/route_transaction.dart';
 import 'home_screen.dart';
-import 'pos_screen.dart';
+import '../pos/pos_screen.dart';
 
 class Main extends StatefulWidget {
   @override

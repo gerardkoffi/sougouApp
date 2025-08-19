@@ -8,14 +8,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sougou_app/ui/screens/auth/login.dart';
 import 'package:toast/toast.dart';
 
-import '../../data/model/auth_model.dart';
-import '../../data/repositories/auth_repositories.dart';
-import '../../helpers/shared_values.dart';
-import '../../my_theme.dart';
-import '../custom/buttoms.dart';
-import '../custom/devices_info.dart';
-import '../custom/my_widget.dart';
-import '../custom/toast_component.dart';
+import '../../../data/model/auth_model.dart';
+import '../../../data/repositories/auth_repositories.dart';
+import '../../../helpers/shared_values.dart';
+import '../../../my_theme.dart';
+import '../../custom/buttoms.dart';
+import '../../custom/devices_info.dart';
+import '../../custom/my_widget.dart';
+import '../../custom/toast_component.dart';
 import 'dashboard.dart';
 
 class Account extends StatefulWidget {

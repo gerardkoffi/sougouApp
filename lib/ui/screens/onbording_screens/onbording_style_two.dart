@@ -3,8 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sougou_app/cubit/get_onbording_cubit.dart';
 import 'package:sougou_app/utils/constants.dart';
-import 'package:sougou_app/main.dart';
-import 'package:sougou_app/ui/screens/main_screen.dart';
 import 'package:sougou_app/ui/widgets/glassmorphism_container.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sougou_app/ui/screens/dashboard.dart';
+import 'package:sougou_app/ui/screens/home/dashboard.dart';
 import '../../../cubit/auth_cubit.dart';
 import '../../../data/model/auth_model.dart';
 import '../../custom/my_appbar.dart';

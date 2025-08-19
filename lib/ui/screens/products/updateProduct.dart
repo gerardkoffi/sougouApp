@@ -12,26 +12,26 @@ import 'package:intl/intl.dart' as intl;
 import 'package:one_context/one_context.dart';
 import 'package:sougou_app/data/model/marques_model.dart';
 import 'package:sougou_app/data/model/product_model.dart';
-import 'package:sougou_app/ui/screens/productsScreen.dart';
+import 'package:sougou_app/ui/screens/products/productsScreen.dart';
 import 'package:toast/toast.dart';
 
-import '../../data/model/common_radio_model.dart';
-import '../../data/model/file_model.dart';
-import '../../data/repositories/product_repositories.dart';
-import '../../helpers/shared_values.dart';
-import '../../my_theme.dart';
-import '../../utils/decoration.dart';
-import '../custom/app_style.dart';
-import '../custom/buttoms.dart';
-import '../custom/commun_style.dart';
-import '../custom/devices_info.dart';
-import '../custom/dropdown_model.dart';
-import '../custom/input_decoration.dart';
-import '../custom/loading.dart';
-import '../custom/my_widget.dart';
-import '../custom/route_transaction.dart';
-import '../custom/summer_note.dart';
-import '../custom/toast_component.dart';
+import '../../../data/model/common_radio_model.dart';
+import '../../../data/model/file_model.dart';
+import '../../../data/repositories/product_repositories.dart';
+import '../../../helpers/shared_values.dart';
+import '../../../my_theme.dart';
+import '../../../utils/decoration.dart';
+import '../../custom/app_style.dart';
+import '../../custom/buttoms.dart';
+import '../../custom/commun_style.dart';
+import '../../custom/devices_info.dart';
+import '../../custom/dropdown_model.dart';
+import '../../custom/input_decoration.dart';
+import '../../custom/loading.dart';
+import '../../custom/my_widget.dart';
+import '../../custom/route_transaction.dart';
+import '../../custom/summer_note.dart';
+import '../../custom/toast_component.dart';
 
 
 class UpdateProduct extends StatefulWidget {

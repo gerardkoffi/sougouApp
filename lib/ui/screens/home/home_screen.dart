@@ -5,16 +5,16 @@ import 'package:sougou_app/ui/custom/chart_top_product.dart';
 import 'package:sougou_app/ui/screens/settings_screen/parameter_screen.dart';
 import 'package:sougou_app/ui/screens/settings_screen/payment_setting.dart';
 
-import '../../helpers/shimmerHelpers.dart';
-import '../../my_theme.dart';
-import '../custom/app_style.dart';
-import '../custom/buttoms.dart';
-import '../custom/charts2.dart';
-import '../custom/customerDateTimes.dart';
-import '../custom/devices_info.dart';
-import '../custom/my_widget.dart';
-import '../custom/route_transaction.dart';
-import 'settings_screen/forfait_screen.dart';
+import '../../../helpers/shimmerHelpers.dart';
+import '../../../my_theme.dart';
+import '../../custom/app_style.dart';
+import '../../custom/buttoms.dart';
+import '../../custom/charts2.dart';
+import '../../custom/customerDateTimes.dart';
+import '../../custom/devices_info.dart';
+import '../../custom/my_widget.dart';
+import '../../custom/route_transaction.dart';
+import '../settings_screen/forfait_screen.dart';
 
 class Home extends StatefulWidget {
   final bool fromBottombar;

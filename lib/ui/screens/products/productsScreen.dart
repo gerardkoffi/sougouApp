@@ -9,28 +9,28 @@ import 'package:route_transitions/route_transitions.dart';
 import 'package:sougou_app/data/model/auth_model.dart';
 import 'package:sougou_app/ui/screens/products/search_product.dart';
 import 'package:sougou_app/ui/screens/settings_screen/forfait_screen.dart';
-import 'package:sougou_app/ui/screens/updateProduct.dart';
+import 'package:sougou_app/ui/screens/products/updateProduct.dart';
 import 'package:toast/toast.dart';
 
-import '../../data/model/magasin_model.dart';
-import '../../data/model/product_model.dart';
-import '../../data/repositories/magasin_repositories.dart';
-import '../../data/repositories/product_repositories.dart';
-import '../../helpers/shimmerHelpers.dart';
-import '../../my_theme.dart';
-import '../../utils/decoration.dart';
-import '../custom/app_style.dart';
-import '../custom/buttoms.dart';
-import '../custom/commun_style.dart';
-import '../custom/devices_info.dart';
-import '../custom/dropdown_model.dart';
-import '../custom/input_decoration.dart';
-import '../custom/loading.dart';
-import '../custom/my_appbar.dart';
-import '../custom/my_widget.dart';
-import '../custom/route_transaction.dart';
-import '../custom/submit_buttom.dart';
-import '../custom/toast_component.dart';
+import '../../../data/model/magasin_model.dart';
+import '../../../data/model/product_model.dart';
+import '../../../data/repositories/magasin_repositories.dart';
+import '../../../data/repositories/product_repositories.dart';
+import '../../../helpers/shimmerHelpers.dart';
+import '../../../my_theme.dart';
+import '../../../utils/decoration.dart';
+import '../../custom/app_style.dart';
+import '../../custom/buttoms.dart';
+import '../../custom/commun_style.dart';
+import '../../custom/devices_info.dart';
+import '../../custom/dropdown_model.dart';
+import '../../custom/input_decoration.dart';
+import '../../custom/loading.dart';
+import '../../custom/my_appbar.dart';
+import '../../custom/my_widget.dart';
+import '../../custom/route_transaction.dart';
+import '../../custom/submit_buttom.dart';
+import '../../custom/toast_component.dart';
 import 'newproduct_screen.dart';
 
 class Products extends StatefulWidget {
@@ -61,8 +61,9 @@ class _ProductsState extends State<Products> {
   CommonDropDownItem? selectedMagasins;
   TextEditingController  prixAchatEditTextController = TextEditingController();
   TextEditingController  prixVenteEditTextController = TextEditingController();
+  TextEditingController  qteEditTextController = TextEditingController();
   String? id,magasinId;
-  int? prixAchat,prixVente;
+  int? prixAchat,prixVente,qteVente;
   bool? statu;
   // double variables
   double mHeight = 0.0, mWidht = 0.0;
@@ -140,10 +141,12 @@ class _ProductsState extends State<Products> {
     statu;
     prixAchat;
     prixVente;
+    qteVente;
 
     if (selectedMagasins != null) magasinId = selectedMagasins?.key;
     prixAchat = int.tryParse(prixAchatEditTextController.text.trim()) ?? 0;
     prixVente = int.tryParse(prixVenteEditTextController.text.trim()) ?? 0;
+    qteVente = int.tryParse(qteEditTextController.text.trim()) ?? 0;
     statu = true;
 
   }
@@ -155,6 +158,9 @@ class _ProductsState extends State<Products> {
       _showToast("Le magasin est requis");
       return false;
     } else if (prixVenteEditTextController.text.trim().isEmpty) {
+      _showToast("prix de vente requis");
+      return false;
+    } else if (qteEditTextController.text.trim().isEmpty) {
       _showToast("prix de vente requis");
       return false;
     }else if (int.tryParse(prixVenteEditTextController.text.trim())! < int.tryParse(prixAchatEditTextController.text.trim())! ){
@@ -183,7 +189,7 @@ class _ProductsState extends State<Products> {
     await setAssotimentValues();
 
     print("📍 Validation des champs obligatoires");
-    if (prixAchat == null || prixVente == null || magasinId == null) {
+    if (prixAchat == null || prixVente == null || magasinId == null || qteVente == null) {
       Loading.hide();
       ToastComponent.showDialog(
         "Certains champs obligatoires sont manquants",
@@ -199,6 +205,7 @@ class _ProductsState extends State<Products> {
       "statut": statu ?? '',
       "prixAchat": prixAchat ?? '',
       "prixVente": prixVente ?? '',
+      "quantite": qteVente ?? '',
     };
 
     try {
@@ -950,6 +957,7 @@ class _ProductsState extends State<Products> {
 
     prixAchatEditTextController.clear();
     prixVenteEditTextController.clear();
+    qteEditTextController.clear();
     selectedMagasins = null;
     showDialog(
       context: context,
@@ -968,45 +976,48 @@ class _ProductsState extends State<Products> {
                   ),
                 ),
               ),
-              content: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      "Attribuer le produit à un magasin",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w400,
-                        fontSize: 14,
-                      ),
+              content: SafeArea(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: [
+                        _buildDropDownField(
+                          "Magasin",
+                              (value) {
+                            setState(() {
+                              selectedMagasins = value;
+                            });
+                          },
+                          selectedMagasins,
+                          magasins,
+                          isMandatory: true
+                        ),
+                        itemSpacer(),
+                        buildIntTextField(
+                          "Prix d'achat",
+                          "Entrez le prix d'achat",
+                          prixAchatEditTextController,
+                          isMandatory: true,
+                        ),
+                        itemSpacer(),
+                        buildIntTextField(
+                          "Prix de vente",
+                          "Entrez le prix de vente",
+                          prixVenteEditTextController,
+                          isMandatory: true,
+                        ),
+                        itemSpacer(),
+                        buildIntTextField(
+                          "Stock",
+                          "Entrez la quantité de produit",
+                          qteEditTextController,
+                          isMandatory: true,
+                        ),
+                      ],
                     ),
-                    itemSpacer(),
-                    _buildDropDownField(
-                      "Magasin",
-                          (value) {
-                        setState(() {
-                          selectedMagasins = value;
-                        });
-                      },
-                      selectedMagasins,
-                      magasins,
-                      isMandatory: true
-                    ),
-                    itemSpacer(),
-                    buildIntTextField(
-                      "Prix d'achat",
-                      "Entrez le prix d'achat",
-                      prixAchatEditTextController,
-                      isMandatory: true,
-                    ),
-                    itemSpacer(),
-                    buildIntTextField(
-                      "Prix de vente",
-                      "Entrez le prix de vente",
-                      prixVenteEditTextController,
-                      isMandatory: true,
-                    ),
-                  ],
+                  ),
                 ),
               ),
               actions: [

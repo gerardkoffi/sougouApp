@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:one_context/one_context.dart';
 import 'package:route_transitions/route_transitions.dart';
 import 'package:sougou_app/ui/screens/settings_screen/forfait_screen.dart';
-import 'package:sougou_app/ui/screens/updateProduct.dart';
+import 'package:sougou_app/ui/screens/products/updateProduct.dart';
 import 'package:toast/toast.dart';
 
 import '../../../data/model/magasin_model.dart';
@@ -29,7 +29,7 @@ import '../../custom/my_widget.dart';
 import '../../custom/route_transaction.dart';
 import '../../custom/submit_buttom.dart';
 import '../../custom/toast_component.dart';
-import '../newproduct_screen.dart';
+import 'newproduct_screen.dart';
 
 class SearchProducts extends StatefulWidget {
   final bool fromBottomBar;
