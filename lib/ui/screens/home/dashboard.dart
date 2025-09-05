@@ -12,7 +12,7 @@ import '../../custom/commun_style.dart';
 import '../../custom/customerDateTimes.dart';
 import '../../custom/route_transaction.dart';
 import 'home_screen.dart';
-import '../pos/pos_screen.dart';
+import '../pos_screen/pos_screen.dart';
 
 class Main extends StatefulWidget {
   @override

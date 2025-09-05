@@ -582,7 +582,8 @@ class _NewProductState extends State<NewProduct> {
                       (value) {
                     selectedSousFamille = value;
                     setChange();
-                  }, selectedSousFamille, sous_familles),),
+                  }, selectedSousFamille, sous_familles),
+              ),
               SizedBox(width: 10,),
               Expanded(child: _buildDropDownField(
                   "Rayon",
