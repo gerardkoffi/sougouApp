@@ -3,16 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:one_context/one_context.dart';
 import 'package:toast/toast.dart';
 import '../../../data/model/categorie_model.dart';
+import '../../../data/model/product_model.dart';
+import '../../../data/repositories/product_repositories.dart';
 import '../../../helpers/shimmerHelpers.dart';
 import '../../../my_theme.dart';
 import '../../../utils/decoration.dart';
 import '../../../utils/pos_add_products.dart';
 import '../../../utils/pos_btn.dart';
-import '../../../utils/pos_customer_info_row.dart';
-import '../../../utils/pos_item_card.dart';
 import '../../../utils/pos_price.dart';
-import '../../../utils/pos_product_list.dart';
-import '../../custom/app_style.dart';
 import '../../custom/buttoms.dart';
 import '../../custom/devices_info.dart';
 import '../../custom/input_decoration.dart';
@@ -20,6 +18,7 @@ import '../../custom/my_appbar.dart';
 import '../../custom/my_widget.dart';
 import '../../custom/route_transaction.dart';
 import '../../custom/toast_component.dart';
+import 'invoice_screen.dart';
 
 
 class PosManager extends StatefulWidget {
@@ -52,20 +51,26 @@ class _PosManagerState extends State<PosManager> {
   TextEditingController();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _transactionController = TextEditingController();
-
+  ScrollController _scrollController =
+  new ScrollController(initialScrollOffset: 0);
 
   bool isSetCustomerInfo = false;
   List<Product> products = [];
+  List<Produit> _productList = [];
   bool showAddAddressBtn = true;
   int? _selected_shipping_address;
-
+  bool _isProductInit = false;
 
 // category
   Category? selectedCategory;
   List<Category> categories = [];
-
+  int _page = 0;
+  int _totalPages = 1;
+  int _totalItem = 0;
+  int _currentPage = 0;
+  int _restProduct = 0;
   String? sessionUser;
-
+  double mHeight = 0.0, mWidht = 0.0;
   int? selectedProduct;
   String? tempUserdata;
 
@@ -77,7 +82,31 @@ class _PosManagerState extends State<PosManager> {
   TextEditingController _cityController = TextEditingController();
 
   Map walkCustomerPostValue = {};
-
+  getProductList() async {
+    var productResponse = await ProductRepository().getProducts(_page);
+    print("📦 Réponse brute: $productResponse");
+    _totalPages = productResponse.corps?.totalPages ?? 1;
+    _totalItem = productResponse.corps?.totalItems ?? 1;
+    _currentPage = productResponse.corps?.currentPage ?? 1;
+    final produits = productResponse.corps?.produits ?? [];
+    if (produits.isEmpty) {
+      if (OneContext.hasContext) {
+        ToastComponent.showDialog(
+          "Pas de produits",
+          gravity: Toast.center,
+          bgColor: MyTheme.white,
+          textStyle: const TextStyle(color: Colors.black),
+        );
+      }
+      return;
+    }
+    _productList.addAll(productResponse.corps!.produits);
+    _page; // ⬅️ n'incrémente que si des produits sont récupérés
+    _currentPage++;
+    _showMoreProductLoadingContainer = false;
+    _isProductInit = true;
+    setState(() {});
+  }
 
   selectProduct() {
     return OneContext().showDialog(
@@ -115,9 +144,9 @@ class _PosManagerState extends State<PosManager> {
                 child: Column(
                   children: [
                     buildSearchBox(setState),
-                    itemSpacer(height: 10.0),
-                    buildSelectCategoryBrand(setState),
-                    itemSpacer(height: 10.0),
+                    //itemSpacer(height: 10.0),
+                    //buildSelectCategoryBrand(setState),
+                    itemSpacer(height: 20.0),
                     SizedBox(
                       height: 533,
                       width: 400,
@@ -132,26 +161,12 @@ class _PosManagerState extends State<PosManager> {
                         ),
                         itemCount: 30,
                         itemBuilder: (BuildContext context, int index) {
-                          return _isPosProductInit
+                          return _isProductInit
                               ? GestureDetector(
                             onTap: () {
                               //onTapSelectProduct(index, setState);
                             },
-                            child: Stack(children: [
-                              PosItemCard(
-                                name: "Test",
-                                thumbnailImage:"",
-                                price: "1000",
-                                qty: 1,
-                              ),
-                              Positioned(
-                                right: 16,
-                                top: 16,
-                                child: buildCheckContainer(
-                                  selectedProduct == index,
-                                ),
-                              )
-                            ]),
+                            child: productsContainer(),
                           )
                               : ShimmerHelper().buildBoxShimmer();
                         },
@@ -167,6 +182,238 @@ class _PosManagerState extends State<PosManager> {
     );
   }
 
+  Widget moreProductLoading() {
+    return _showMoreProductLoadingContainer
+        ? Container(
+      alignment: Alignment.center,
+      child: SizedBox(
+        height: 40,
+        width: 40,
+        child: Row(
+          children: [
+            SizedBox(
+              width: 2,
+              height: 2,
+            ),
+            CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    )
+        : SizedBox(
+      height: 5,
+      width: 5,
+    );
+  }
+
+  Widget productsContainer() {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 15,vertical: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListView.builder(
+              controller: _scrollController,
+              physics: NeverScrollableScrollPhysics(),
+              itemCount: _productList.length,
+              shrinkWrap: true,
+              itemBuilder: (context, index) {
+                // print(index);
+                if (index == _productList.length) {
+                  return moreProductLoading();
+                }
+                return
+                  productItem(
+                    index: index,
+                    productId: _productList[index].id,
+                    photoUrl:_productList[index].fullPhotoUrl,
+                    code: _productList[index].code,
+                    nomProduit: _productList[index].nom,
+                    description: _productList[index].description,
+                    secteur: _productList[index].secteur?.libelle ?? 'N/A',
+                    famille: _productList[index].famille?.libelle ?? 'N/A',
+                    sousFamille: _productList[index].sousFamille?.libelle ?? 'N/A',
+                    rayon: _productList[index].rayon?.libelle ?? 'N/A',
+                    marque: _productList[index].marque?.nom ?? 'N/A',
+                    origine: _productList[index].origine?.nom ?? 'N/A',
+                    colisage: _productList[index].colisage.toString(),
+                    poidsProduit: _productList[index].poids.toString(),
+                    status: _productList[index].statut,
+                  );
+              }),
+        ],
+      ),
+    );
+  }
+
+  Container productItem(
+      {int? index,
+        required String productId,
+        required String photoUrl,
+        required String code,
+        required String nomProduit,
+        required String description,
+        required String secteur,
+        required String famille,
+        required String sousFamille,
+        required String rayon,
+        required String marque,
+        required String origine,
+        required String colisage,
+        required String poidsProduit,
+        required bool status,
+      }) {
+    return MyWidget.customCardView(
+        elevation: 5,
+        backgroundColor: MyTheme.white,
+        height: 90,
+        width: mWidht,
+        margin: EdgeInsets.only(
+          bottom: 20,
+        ),
+        padding: EdgeInsets.only(top: 5,bottom: 5),
+        borderColor: MyTheme.light_grey,
+        borderRadius: 6,
+        child: InkWell(
+          onTap: () {
+            print(photoUrl);
+            //MyTransaction(context: context).push(NewProduct(siModifie:false, siNouveau:true));
+          },
+          child: Row(
+            children: [
+              SizedBox(
+                width: 2,
+              ),
+              MyWidget.imageWithPlaceholder(
+                width: 80.0,
+                height: 90.0,
+                fit: BoxFit.cover,
+                url: photoUrl,
+                radius: BorderRadius.circular(5),
+              ),
+              //Image.asset(photoUrl,width: 80,height: 80,fit: BoxFit.contain,),
+              SizedBox(
+                width: 11,
+              ),
+              Container(
+                width: mWidht - 129,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            width: mWidht - 170,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Code produit : $code",
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: MyTheme.font_grey,
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(
+                                  height: 3,
+                                ),Text(
+                                  "Nom: $nomProduit",
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: MyTheme.font_grey,
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                SizedBox(
+                                  height: 3,
+                                ),
+                                Text(
+                                  "Secteur : $secteur",
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: MyTheme.font_grey,
+                                      fontWeight: FontWeight.w600),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                child: Text(
+                                    "Colisage : $colisage",
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: MyTheme.font_grey,
+                                        fontWeight: FontWeight.w600)),
+                              ),
+                            ],
+                          ),
+                          status == true?
+                          Row(
+                            children: [
+                              Text(
+                                  "Activé",
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: MyTheme.font_grey,
+                                      fontWeight: FontWeight.w600)),
+                              Padding(
+                                  padding: const EdgeInsets.only(left: 8,right: 8),
+                                  child:  Image.asset(
+                                    "assets/icon/verify.png",
+                                    width: 18,
+                                    height: 18,
+                                    fit: BoxFit.contain,
+                                  )
+                              ),
+                            ],
+                          ):
+                          Row(
+                            children: [
+                              Text(
+                                  "Desactivé",
+                                  style: TextStyle(
+                                      fontSize: 12,
+                                      color: MyTheme.font_grey,
+                                      fontWeight: FontWeight.w600)),
+                              Padding(
+                                  padding: const EdgeInsets.only(left: 8,right: 8),
+                                  child:  Image.asset(
+                                    "assets/icon/unverify.png",
+                                    width: 18,
+                                    height: 18,
+                                    fit: BoxFit.contain,
+                                  )
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )) as Container;
+  }
 
   filterProduct(setState) {
 
@@ -532,7 +779,7 @@ class _PosManagerState extends State<PosManager> {
         controller: _searchController,
         decoration: buildAddressInputDecoration(
           context,
-          "Code barre",
+          "Trouvez un produit",
         ),
         onEditingComplete: () async {
           filterProduct(setState);
@@ -645,10 +892,6 @@ class _PosManagerState extends State<PosManager> {
                     price: "0 FCFA"),
                 itemSpacer(height: 5.0),
                 PosTextPrice(
-                    title: "Livraison",
-                    price: "0 FCFA"),
-                itemSpacer(height: 5.0),
-                PosTextPrice(
                     title: "Remise",
                     price: "0 FCFA"),
                 itemSpacer(),
@@ -679,7 +922,10 @@ class _PosManagerState extends State<PosManager> {
 
               PosBtn(
                 onTap: () {
-                  //onSubmitPOS("cash");
+                  Navigator.of(context, rootNavigator: true).pop(); // ferme le dialog
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    MyTransaction(context: context).push(const ReceiptScreen());
+                  });
                 },
                 text: "Paiement Cash",
                 color: MyTheme.app_accent_color,

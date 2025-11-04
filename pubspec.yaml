@@ -50,6 +50,7 @@ dependencies:
   dropdown_button2: ^2.3.9
   http_parser: ^4.0.2
   jwt_decoder: ^2.0.1
+  qr_flutter: ^4.1.0
 
 
 

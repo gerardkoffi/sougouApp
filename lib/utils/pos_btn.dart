@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 import '../../my_theme.dart';
 
@@ -9,6 +10,7 @@ class PosBtn extends StatelessWidget {
   final Color? textColor;
   final FontWeight? fontWeight;
   final VoidCallback? onTap;
+  final Color? iconColor;
   const PosBtn({
     Key? key,
     this.text = '--',
@@ -17,6 +19,7 @@ class PosBtn extends StatelessWidget {
     this.textColor = MyTheme.app_accent_color,
     this.fontWeight = FontWeight.normal,
     this.onTap,
+    this.iconColor = Colors.white,
   }) : super(key: key);
 
   @override
@@ -25,9 +28,9 @@ class PosBtn extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        height: 36.0,
+        height: 45.0,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4.0),
+          borderRadius: BorderRadius.circular(25.0),
           color: color,
           border: Border.all(
             width: 1.0,
@@ -37,6 +40,13 @@ class PosBtn extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            if (icon != null)
+              Icon(
+                icon,
+                size: 16.0,
+                color: iconColor,
+              ),
+            SizedBox(width: 3),
             Center(
               child: Text(
                 text!,
@@ -48,11 +58,7 @@ class PosBtn extends StatelessWidget {
                 ),
               ),
             ),
-            if (icon != null)
-              Icon(
-                icon,
-                size: 16.0,
-              )
+
           ],
         ),
       ),
